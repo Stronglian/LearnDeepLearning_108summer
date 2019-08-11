@@ -5,3 +5,5 @@ _DataSet/forP/*
 SuperResolution_Keras/datasetNPY/dataset64.npy
 SuperResolution_Keras/datasetNPY/dataset128.npy
 SuperResolution_Keras/datasetNPY/dataset32.npy
+SuperResolution_Keras/doc/*
+*.pyc
