@@ -9,6 +9,12 @@ from utils_collect import SaveNPY
 dataFolder = "../_DataSet/forK/"
 subfolderList = os.listdir(dataFolder)
 
+saveFolder = "./datasetNPY/"
+try:
+    os.mkdir(saveFolder)
+except:
+    print("已建立", saveFolder)
+
 for i in range(len(subfolderList)): #i = 0
     subfolder = subfolderList[i]
     tmpFolderList = os.listdir(dataFolder + "/" + subfolder)
@@ -26,4 +32,4 @@ for i in range(len(subfolderList)): #i = 0
     dictTmp = dict()
     dictTmp[subfolder + "_x"] = np.array(imgList)
     dictTmp[subfolder + "_y"] = np.array(imgCountList)
-    SaveNPY(subfolder+".npy", dictTmp)
+    SaveNPY(saveFolder + subfolder+".npy", dictTmp)
