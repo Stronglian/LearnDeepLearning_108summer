@@ -3,6 +3,7 @@
 from utils_collect import LoadNPY
 import os 
 import numpy as np
+import tensorflow as tf
 #import matplotlib.pyplot as plt
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -82,7 +83,7 @@ def MakeModel_TEST(shape=(64,64,3)):
     layer_ = Conv2D(256, (3,3), strides=(1, 1), padding='same')(layer_)
     layer_ = Conv2DTranspose(512,(3,3), strides=(2, 2), padding='same')(layer_)
     layer_ = Conv2D(32, (3,3), strides=(2, 2), padding='same')(layer_)
-    layer_output = Conv2DTranspose(3,(3,3),strides=(1, 1), padding='same')(layer_)
+    layer_output = Conv2DTranspose(3,(3,3),strides=(1, 1), padding='same', activation='sigmoid')(layer_)
     
     # construct the autoencoder model
     outputModel = Model(inputs=input_img, outputs=layer_output)
@@ -138,9 +139,9 @@ itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 for epoch in range(epochs):
     batch_index = 0
     for step in range(itr): #936
-        batch_in  = dataSet["dataset32_x"][batch_index : batch_index+batch_size,:,:].astype(np.float) 
-        batch_mid = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float) 
-#        batch_out = dataSet["dataset128_x"][batch_index : batch_index+batch_size,:,:].astype(np.float) 
+        batch_in  = dataSet["dataset32_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)/255.0
+        batch_mid = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)/255.0
+#        batch_out = dataSet["dataset128_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)/255.0
 #        batch_in = GetData(dataSet, "dataset32_x",  batch_index, batch_size, index_shuffle)
 #        batch_mid = GetData(dataSet, "dataset64_x",  batch_index, batch_size, index_shuffle)
 #        batch_out = GetData(dataSet, "dataset128_x",  batch_index, batch_size, index_shuffle)
