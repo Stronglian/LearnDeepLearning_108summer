@@ -3,14 +3,13 @@
 from utils_collect import LoadNPY
 import os 
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 #%%
-from keras import backend as K
-from keras.datasets import mnist
-from keras.models import Model, Sequential
-from keras.layers import Dense, Input, Flatten, Conv2D, Activation, MaxPooling2D, Conv2DTranspose
+#from keras import backend as K
+from keras.models import Model#, Sequential
+from keras.layers import Conv2DTranspose, Input, Conv2D #, Dense,  Flatten, Activation, MaxPooling2D
 
 #%%
 from keras.applications.vgg16 import VGG16
@@ -32,7 +31,14 @@ dataSet = dict()
 for _n in subfolderList:
     tmpDict = LoadNPY(dataFolder+_n)
     dataSet.update(tmpDict)
-
+#shuffle
+index_shuffle = np.array([i for i in range(len(dataSet["dataset32_x"]))], dtype=np.int)
+index_shuffle = np.random.shuffle(index_shuffle)
+#
+def GetData(dict_input, dict_key,  batch_index, batch_size, index_shuffle):
+#    batch_data  = dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size,:,:]].astype(np.float)
+#    return batch_data
+    return dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size,:,:]].astype(np.float)
 #%% MODEL
 # mainModel
 def MakeModel_TEST(shape=(64,64,3)):
@@ -124,9 +130,9 @@ itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 for epoch in range(epochs):
     batch_index = 0
     for step in range(itr): #936
-        batch_in  = dataSet["dataset32_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
-        batch_mid = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
-#        batch_out = dataSet["dataset128_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
+        batch_in  = dataSet["dataset32_x"][batch_index : batch_index+batch_size,:,:].astype(np.float) #batch_in = GetData(dataSet, "dataset32_x",  batch_index, batch_size, index_shuffle)
+        batch_mid = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float) #batch_mid = GetData(dataSet, "dataset64_x",  batch_index, batch_size, index_shuffle)
+#        batch_out = dataSet["dataset128_x"][batch_index : batch_index+batch_size,:,:].astype(np.float) #batch_out = GetData(dataSet, "dataset128_x",  batch_index, batch_size, index_shuffle)
         batch_index += batch_size
         
         batch_lossModel1 = lossModel.predict(batch_mid)
