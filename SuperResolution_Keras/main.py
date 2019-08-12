@@ -6,6 +6,14 @@ import numpy as np
 #import matplotlib.pyplot as plt
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+#%% keras 設定
+# 自動增長 GPU 記憶體用量
+gpu_options = tf.GPUOptions(allow_growth=True)
+sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+
+# 設定 Keras 使用的 Session
+tf.keras.backend.set_session(sess)
+
 #%%
 #from keras import backend as K
 from keras.models import Model#, Sequential
