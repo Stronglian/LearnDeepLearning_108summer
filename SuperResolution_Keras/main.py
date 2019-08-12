@@ -16,7 +16,7 @@ from keras.layers import Dense, Input, Flatten, Conv2D, Activation, MaxPooling2D
 from keras.applications.vgg16 import VGG16
 
 #%% FLOW CONTROL
-INT_FLOW_CONTROL = 1
+INT_FLOW_CONTROL = [1]
 DICT_FLOW_NAME = {1:"載入資料庫", 
                   2:"",
                   3:""}
@@ -77,9 +77,10 @@ def MakeModel_TEST(shape=(64,64,3)):
 #%%
 k = 32
 model1 = MakeModel_TEST(shape=(k, k, 3))
+model1.summary()
+
 #k = 64
 #model2 = MakeModel_TEST(shape=(k, k, 3))
-model1.summary()
 #print("==="*10)
 #model2.summary()
 
@@ -96,7 +97,7 @@ selectedOutputs = [lossModel.layers[i].output for i in selectedLayers]
 lossModel = Model(lossModel.inputs,selectedOutputs)
 lossModel.name = "lossModel_VGG"
 #%% LOSS SET - LINK
-
+# model 1
 lossModelOutputs1 = lossModel(model1.output)
 
 partModel_1 = Model(model1.input, lossModelOutputs1)
@@ -105,15 +106,18 @@ partModel_1.name = "m1_32to64"
 # with model
 partModel_1.compile('adam',loss='mse')
 
+## model 2
 #lossModelOutputs2 = lossModel(model2.output)
 #partModel_2 = Model(model2.input, lossModelOutputs2)
 #partModel_2.name = "m2_64to128"
 #partModel_2.compile('adam',loss='mse')
-
-#fullModel   = 
+#
+## model 3
+#
+##fullModel   = 
 #%% train parm set
 epochs = 1
-batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
+batch_size = 8 #if 32 : 4G VRAM 不足，16 頂
 itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 
 #%% TRAIN
@@ -121,17 +125,31 @@ for epoch in range(epochs):
     batch_index = 0
     for step in range(itr): #936
         batch_in  = dataSet["dataset32_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
-        batch_out = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
+        batch_mid = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
+#        batch_out = dataSet["dataset128_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
         batch_index += batch_size
         
-#        triple_batch = np.concatenate((batch,batch,batch),axis=-1)
-        batch_lossModel = lossModel.predict(batch_out)
+        batch_lossModel1 = lossModel.predict(batch_mid)
+#        batch_lossModel2 = lossModel.predict(batch_out)
         
-        loss = partModel_1.train_on_batch(batch_in, batch_lossModel)
+        loss1 = partModel_1.train_on_batch(batch_in, batch_lossModel1)
+#        loss2 = partModel_2.train_on_batch(batch_mid, batch_lossModel2)
+#        
+#        loss3 = partModel_2.train_on_batch(partModel_1.predict(batch_in), batch_lossModel2)
         
         if step%100 == 0 :
-            print('itr:',step,' total_loss:', loss[0], ' loss:',loss[1:])
-    print('==========epcohs:',epoch,' loss:', loss)
+#            print('itr:',step,' total_loss:', loss[0], ' loss:',loss[1:])
+            print('itr:%4d, \n1- total_loss:%7.4f loss:'%(step, loss1[0]), loss1[1:])
+#            print('2- total_loss:%7.4f loss:'%(loss2[0]), loss2[1:])
+#            print('3- total_loss:%7.4f loss:'%(loss3[0]), loss3[1:])
+    print('==========epcohs:',epoch,' loss:', loss1)
     
 #%% SAVE MODEL
+partModel_1.save(partModel_1.name+'.h5')
+#partModel_2.save(partModel_2.name+'.h5')
+#%% USE
+predict1 = partModel_1.predict(dataSet["dataset32_x"][:5,:])
+predict1_img = predict1[0]#.reshape(5, 64, 64, 3)
+#predict2 = partModel_1.predict(predict1_img)
+#predict2_img = predict2[0]#.reshape(5, 64, 64, 3)
 
