@@ -97,13 +97,13 @@ lossModel = Model(lossModel.inputs,selectedOutputs)
 lossModel.name = "lossModel_VGG"
 #%% LOSS SET - LINK
 
-#lossModelOutputs1 = lossModel(model1.output)
-#
-#partModel_1 = Model(model1.input, lossModelOutputs1)
-#partModel_1.name = "m1_32to64"
-#
-## with model
-#partModel_1.compile('adam',loss='mse')
+lossModelOutputs1 = lossModel(model1.output)
+
+partModel_1 = Model(model1.input, lossModelOutputs1)
+partModel_1.name = "m1_32to64"
+
+# with model
+partModel_1.compile('adam',loss='mse')
 
 #lossModelOutputs2 = lossModel(model2.output)
 #partModel_2 = Model(model2.input, lossModelOutputs2)
@@ -111,7 +111,6 @@ lossModel.name = "lossModel_VGG"
 #partModel_2.compile('adam',loss='mse')
 
 #fullModel   = 
-model1.compile('adam',loss='mse')
 #%% train parm set
 epochs = 1
 itr = 936 #936
@@ -125,9 +124,10 @@ for epoch in range(epochs):
         batch_out = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
         batch_index += batch_size
         
-#        batch_lossModel = lossModel.predict(batch_out)
+#        triple_batch = np.concatenate((batch,batch,batch),axis=-1)
+        batch_lossModel = lossModel.predict(batch_out)
         
-        loss = model1.train_on_batch(batch_in, batch_out)
+        loss = partModel_1.train_on_batch(batch_in, batch_lossModel)
         
         if step%100 == 0 :
             print('itr:',step,' total_loss:', loss[0], ' loss:',loss[1:])
