@@ -6,14 +6,19 @@ import numpy as np
 
 from utils_collect import SaveNPY
 
-dataFolder = "../_DataSet/forK/"
+dataFolder = "D:/UPLOAD/hao/super_resolution_keras/dataset/"
 subfolderList = os.listdir(dataFolder)
+
+for _i in range(len(subfolderList)):
+    if subfolderList[_i][0] != "d":
+        subfolderList.pop(_i)
 
 saveFolder = "./datasetNPY/"
 try:
     os.mkdir(saveFolder)
+    print(saveFolder, "已建立")
 except:
-    print("已建立", saveFolder)
+    print(saveFolder, "已存在")
 
 for i in range(len(subfolderList)): #i = 0
     subfolder = subfolderList[i]
@@ -33,3 +38,6 @@ for i in range(len(subfolderList)): #i = 0
     dictTmp[subfolder + "_x"] = np.array(imgList)
     dictTmp[subfolder + "_y"] = np.array(imgCountList)
     SaveNPY(saveFolder + subfolder+".npy", dictTmp)
+    
+    #show
+    print(subfolder, "DONE")
