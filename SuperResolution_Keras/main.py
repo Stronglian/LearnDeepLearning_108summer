@@ -113,8 +113,8 @@ partModel_1.compile('adam',loss='mse')
 #fullModel   = 
 #%% train parm set
 epochs = 1
-itr = 936 #936
-batch_size = 32
+batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
+itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 
 #%% TRAIN
 for epoch in range(epochs):
