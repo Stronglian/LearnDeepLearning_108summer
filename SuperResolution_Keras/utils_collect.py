@@ -44,3 +44,10 @@ def LoadNPY(nameNPY, shape = None):
 def SaveNPY(nameNPY, nameArr):
     np.save(nameNPY, nameArr)
     return
+
+#%%
+    
+#%%
+    
+if __name__ == "__main":
+    pass
