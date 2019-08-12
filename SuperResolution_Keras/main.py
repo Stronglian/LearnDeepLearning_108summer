@@ -25,7 +25,7 @@ DICT_FLOW_NAME = {1:"載入資料庫",
 dataFolder = "./datasetNPY/"
 subfolderList = os.listdir(dataFolder)
 #os.listdir(dataFolder+subfolderList[0])
-
+saveFolder = "./"
 
 #%% LOAD DATASET
 dataSet = dict()
@@ -116,7 +116,7 @@ partModel_1.compile('adam',loss='mse')
 #
 ##fullModel   = 
 #%% train parm set
-epochs = 1
+epochs = 50
 batch_size = 8 #if 32 : 4G VRAM 不足，16 頂
 itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 
@@ -145,7 +145,7 @@ for epoch in range(epochs):
     print('==========epcohs:',epoch,' loss:', loss1)
     
 #%% SAVE MODEL
-partModel_1.save(partModel_1.name+'.h5')
+partModel_1.save(saveFolder + '%s_e%d_b%d.h5'%(partModel_1.name, epochs, batch_size))
 #partModel_2.save(partModel_2.name+'.h5')
 #%% USE
 predict1 = partModel_1.predict(dataSet["dataset32_x"][:5,:])
