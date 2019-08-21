@@ -26,14 +26,16 @@ from keras.applications.vgg16 import VGG16
 #%% FLOW CONTROL
 INT_FLOW_CONTROL = [1]
 DICT_FLOW_NAME = {1:"載入資料庫", 
-                  2:"",
-                  3:""}
+                  2:"建構",
+                  3:"訓練",
+                  4:"儲存模型",
+                  5:"載入"}
 
 #%%
 dataFolder = "./datasetNPY/"
 subfolderList = os.listdir(dataFolder)
 #os.listdir(dataFolder+subfolderList[0])
-saveFolder = "./"
+modelSaveFolder = "./save/weight/"
 
 #%% LOAD DATASET
 dataSet = dict()
@@ -109,17 +111,17 @@ for layer in lossModel.layers:
 selectedLayers = [1,2,9,10,17,18] 
 selectedOutputs = [lossModel.layers[i].output for i in selectedLayers]
 # 建立
-lossModel = Model(lossModel.inputs,selectedOutputs)
+lossModel = Model(lossModel.inputs, selectedOutputs)
 lossModel.name = "lossModel_VGG"
 #%% LOSS SET - LINK
-# model 1
-lossModelOutputs1 = lossModel(model1.output)
-
-partModel_1 = Model(model1.input, lossModelOutputs1)
-partModel_1.name = "m1_32to64"
-
-# with model
-partModel_1.compile('adam',loss='mse')
+## model 1
+#lossModelOutputs1 = lossModel(model1.output)
+#
+#partModel_1 = Model(model1.input, lossModelOutputs1)
+#partModel_1.name = "m1_32to64"
+#
+## with model
+#partModel_1.compile('adam',loss='mse')
 
 ## model 2
 #lossModelOutputs2 = lossModel(model2.output)
@@ -130,8 +132,9 @@ partModel_1.compile('adam',loss='mse')
 ## model 3
 #
 ##fullModel   = 
+model1.compile('adam',loss='mse')
 #%% train parm set
-epochs = 50
+epochs = 1
 batch_size = 8 #if 32 : 4G VRAM 不足，16 頂
 itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 
@@ -147,27 +150,29 @@ for epoch in range(epochs):
 #        batch_out = GetData(dataSet, "dataset128_x",  batch_index, batch_size, index_shuffle)
         batch_index += batch_size
         
-        batch_lossModel1 = lossModel.predict(batch_mid)
+#        batch_lossModel1 = lossModel.predict(batch_mid)
 #        batch_lossModel2 = lossModel.predict(batch_out)
         
-        loss1 = partModel_1.train_on_batch(batch_in, batch_lossModel1)
+#        loss1 = partModel_1.train_on_batch(batch_in, batch_lossModel1)
 #        loss2 = partModel_2.train_on_batch(batch_mid, batch_lossModel2)
+        loss1 = model1.train_on_batch(batch_in, batch_mid)
 #        
 #        loss3 = partModel_2.train_on_batch(partModel_1.predict(batch_in), batch_lossModel2)
         
-        if step%100 == 0 :
-#            print('itr:',step,' total_loss:', loss[0], ' loss:',loss[1:])
-            print('itr:%4d, \n1- total_loss:%7.4f loss:'%(step, loss1[0]), loss1[1:])
-#            print('2- total_loss:%7.4f loss:'%(loss2[0]), loss2[1:])
-#            print('3- total_loss:%7.4f loss:'%(loss3[0]), loss3[1:])
+#        if step%100 == 0 :
+##            print('itr:',step,' total_loss:', loss[0], ' loss:',loss[1:])
+#            print('itr:%4d, \n1- total_loss:%7.4f loss:'%(step, loss1[0]), loss1[1:])
+##            print('2- total_loss:%7.4f loss:'%(loss2[0]), loss2[1:])
+##            print('3- total_loss:%7.4f loss:'%(loss3[0]), loss3[1:])
     print('==========epcohs:',epoch,' loss:', loss1)
     
 #%% SAVE MODEL
-partModel_1.save(saveFolder + '%s_e%d_b%d.h5'%(partModel_1.name, epochs, batch_size))
-#partModel_2.save(partModel_2.name+'.h5')
+#partModel_1.save_weights(modelSaveFolder + 'only1T_%s_e%d_b%d.h5'%(partModel_1.name, epochs, batch_size))
+#partModel_2.save_weights(partModel_2.name+'.h5')
 #%% USE
-predict1 = partModel_1.predict(dataSet["dataset32_x"][:5,:])
-predict1_img = predict1[0]#.reshape(5, 64, 64, 3)
-#predict2 = partModel_1.predict(predict1_img)
-#predict2_img = predict2[0]#.reshape(5, 64, 64, 3)
+#predict1 = partModel_1.predict(dataSet["dataset32_x"][:5,:])
+#predict1_img = predict1[0]#.reshape(5, 64, 64, 3)
+##predict2 = partModel_1.predict(predict1_img)
+##predict2_img = predict2[0]#.reshape(5, 64, 64, 3)
+predict1 = model1.predict(dataSet["dataset32_x"][:5,:])
 
