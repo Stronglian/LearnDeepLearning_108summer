@@ -44,10 +44,6 @@ for _n in subfolderList:
 index_shuffle = np.array([i for i in range(len(dataSet["dataset32_x"]))], dtype=np.int)
 index_shuffle = np.random.shuffle(index_shuffle)
 #
-def GetData(dict_input, dict_key,  batch_index, batch_size, index_shuffle, dtype = np.float):
-#    batch_data  = dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size,:,:]].astype(np.float)
-#    return batch_data
-    return dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size,:,:]].astype(dtype)
 #%% MODEL
 # mainModel
 def MakeModel_TEST(shape=(64,64,3)):
