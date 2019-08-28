@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from utils_collect import LoadNPY
+from utils_collect import LoadNPY, GetData
 import os 
 import numpy as np
 import tensorflow as tf
@@ -18,18 +18,18 @@ tf.keras.backend.set_session(sess)
 #%%
 #from keras import backend as K
 from keras.models import Model#, Sequential
-from keras.layers import Conv2DTranspose, Input, Conv2D #, Dense,  Flatten, Activation, MaxPooling2D
+from keras.layers import Conv2DTranspose, Input, Conv2D, Add, Lambda #, Dense,  Flatten, Activation, MaxPooling2D
 
 #%%
 from keras.applications.vgg16 import VGG16
 
 #%% FLOW CONTROL
-INT_FLOW_CONTROL = [1]
-DICT_FLOW_NAME = {1:"載入資料庫", 
-                  2:"建構",
-                  3:"訓練",
-                  4:"儲存模型",
-                  5:"載入"}
+#INT_FLOW_CONTROL = [1]
+#DICT_FLOW_NAME = {1:"載入資料庫", 
+#                  2:"建構",
+#                  3:"訓練",
+#                  4:"儲存模型",
+#                  5:"載入"}
 
 #%%
 dataFolder = "./datasetNPY/"
@@ -46,13 +46,16 @@ for _n in subfolderList:
 index_shuffle = np.array([i for i in range(len(dataSet["dataset32_x"]))], dtype=np.int)
 index_shuffle = np.random.shuffle(index_shuffle)
 #
-def GetData(dict_input, dict_key,  batch_index, batch_size, index_shuffle, dtype = np.float):
-#    batch_data  = dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size,:,:]].astype(np.float)
-#    return batch_data
-    return dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size,:,:]].astype(dtype)
 #%% MODEL
 # mainModel
 def MakeModel_TEST(shape=(64,64,3)):
+    def res_block(x_in, filters, scaling):
+        x = Conv2D(filters, 3, padding='same', activation='relu')(x_in)
+        x = Conv2D(filters, 3, padding='same')(x)
+        if scaling:
+            x = Lambda(lambda t: t * scaling)(x)
+        x = Add()([x_in, x])
+        return x
     # 忘了怎架 R block 果斷放棄
     input_img = Input(shape)
     
@@ -83,9 +86,9 @@ def MakeModel_TEST(shape=(64,64,3)):
     
     layer_ = Conv2DTranspose(512,(3,3), strides=(2, 2), padding='same')(input_img)
     layer_ = Conv2D(256, (3,3), strides=(1, 1), padding='same')(layer_)
-    layer_ = Conv2DTranspose(512,(3,3), strides=(2, 2), padding='same')(layer_)
+    layer_ = Conv2DTranspose(512, (3,3), strides=(2, 2), padding='same')(layer_)
     layer_ = Conv2D(32, (3,3), strides=(2, 2), padding='same')(layer_)
-    layer_output = Conv2DTranspose(3,(3,3),strides=(1, 1), padding='same', activation='sigmoid')(layer_)
+    layer_output = Conv2DTranspose(3, (3,3),strides=(1, 1), padding='same', activation='sigmoid')(layer_)
     
     # construct the autoencoder model
     outputModel = Model(inputs=input_img, outputs=layer_output)
@@ -95,9 +98,12 @@ def MakeModel_TEST(shape=(64,64,3)):
 k = 32
 model1 = MakeModel_TEST(shape=(k, k, 3))
 model1.summary()
+model1.compile('adam',loss='mse')
+model1.name = "model1"
 
 #k = 64
 #model2 = MakeModel_TEST(shape=(k, k, 3))
+#model2.name = "model2"
 #print("==="*10)
 #model2.summary()
 
@@ -115,13 +121,13 @@ lossModel = Model(lossModel.inputs, selectedOutputs)
 lossModel.name = "lossModel_VGG"
 #%% LOSS SET - LINK
 ## model 1
-#lossModelOutputs1 = lossModel(model1.output)
-#
-#partModel_1 = Model(model1.input, lossModelOutputs1)
-#partModel_1.name = "m1_32to64"
+lossModelOutputs1 = lossModel(model1.output)
+
+partModel_1 = Model(model1.input, lossModelOutputs1)
+partModel_1.name = "m1_32to64"
 #
 ## with model
-#partModel_1.compile('adam',loss='mse')
+partModel_1.compile('adam', loss='mse')
 
 ## model 2
 #lossModelOutputs2 = lossModel(model2.output)
@@ -132,7 +138,6 @@ lossModel.name = "lossModel_VGG"
 ## model 3
 #
 ##fullModel   = 
-model1.compile('adam',loss='mse')
 #%% train parm set
 epochs = 1
 batch_size = 8 #if 32 : 4G VRAM 不足，16 頂
@@ -145,18 +150,20 @@ for epoch in range(epochs):
         batch_in  = dataSet["dataset32_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)/255.0
         batch_mid = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)/255.0
 #        batch_out = dataSet["dataset128_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)/255.0
+        
 #        batch_in = GetData(dataSet, "dataset32_x",  batch_index, batch_size, index_shuffle)
 #        batch_mid = GetData(dataSet, "dataset64_x",  batch_index, batch_size, index_shuffle)
 #        batch_out = GetData(dataSet, "dataset128_x",  batch_index, batch_size, index_shuffle)
         batch_index += batch_size
         
-#        batch_lossModel1 = lossModel.predict(batch_mid)
+        batch_lossModel1 = lossModel.predict(batch_mid)
 #        batch_lossModel2 = lossModel.predict(batch_out)
         
-#        loss1 = partModel_1.train_on_batch(batch_in, batch_lossModel1)
+        loss1 = partModel_1.train_on_batch(batch_in, batch_lossModel1)
 #        loss2 = partModel_2.train_on_batch(batch_mid, batch_lossModel2)
-        loss1 = model1.train_on_batch(batch_in, batch_mid)
-#        
+        
+        
+#        loss1 = model1.train_on_batch(batch_in, batch_mid)
 #        loss3 = partModel_2.train_on_batch(partModel_1.predict(batch_in), batch_lossModel2)
         
 #        if step%100 == 0 :
@@ -164,6 +171,7 @@ for epoch in range(epochs):
 #            print('itr:%4d, \n1- total_loss:%7.4f loss:'%(step, loss1[0]), loss1[1:])
 ##            print('2- total_loss:%7.4f loss:'%(loss2[0]), loss2[1:])
 ##            print('3- total_loss:%7.4f loss:'%(loss3[0]), loss3[1:])
+    #一組 batch 結束，換 shuffle?
     print('==========epcohs:',epoch,' loss:', loss1)
     
 #%% SAVE MODEL
