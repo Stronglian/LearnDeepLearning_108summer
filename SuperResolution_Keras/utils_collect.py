@@ -45,8 +45,13 @@ def SaveNPY(nameNPY, nameArr):
     np.save(nameNPY, nameArr)
     return
 
-#%%
+#%% LOAD DATA
     
+def GetData(dict_input, dict_key,  batch_index, batch_size, index_shuffle, dtype = np.float):
+#    batch_data  = dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size,:,:]].astype(np.float)
+#    return batch_data
+    return dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size,:,:]].astype(dtype)
+
 #%%
     
 if __name__ == "__main":
