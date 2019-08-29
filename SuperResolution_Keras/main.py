@@ -60,8 +60,10 @@ def Model_TEST(scale=2, num_filters=64, num_res_blocks=8, res_block_scaling=None
     b = Conv2D(num_filters, 3, padding='same')(b)
     x = Add()([x, b])
 
-    x = b = upsample(x, scale, num_filters)
-    x = Conv2D(3, 3, padding='same')(x)
+#    x = b = upsample(x, scale, num_filters)
+#    x = Conv2D(3, 3, padding='same')(x)
+    x = upsample(x, scale, num_filters)
+    x = b = Conv2D(3, 3, padding='same')(x)
 
     x = Lambda(denormalize)(x)
     return b, Model(x_in, x, name=model_name)
