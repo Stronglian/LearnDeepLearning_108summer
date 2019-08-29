@@ -19,9 +19,9 @@ tf.keras.backend.set_session(sess)
 #from keras import backend as K
 from keras.models import Model#, Sequential
 from keras.layers import Conv2DTranspose, Input, Conv2D, Add #, Dense,  Flatten, Activation, MaxPooling2D
-
-#%%
-from keras.applications.vgg16 import VGG16
+from model_collect import res_block, normalize, denormalize, upsample
+##%%
+#from keras.applications.vgg16 import VGG16
 
 #%% FLOW CONTROL
 INT_FLOW_CONTROL = [1]
@@ -46,21 +46,34 @@ index_shuffle = np.random.shuffle(index_shuffle)
 #
 #%% MODEL
 # mainModel
-def MakeModel_TEST(shape=(64,64,3)):
-    # 忘了怎架 R block 果斷放棄
-    input_img = Input(shape)
-    # https://github.com/krasserm/super-resolution/blob/master/example-edsr.ipynb
-    # https://github.com/krasserm/super-resolution/blob/master/model/edsr.py#L19
-    # https://github.com/krasserm/super-resolution/blob/master/model/common.py
-    # construct the autoencoder model
-    outputModel = Model(inputs=input_img, outputs=layer_output)
-    return outputModel
+def Model_TEST(scale=2, num_filters=64, num_res_blocks=8, res_block_scaling=None, model_name = None): #origin (4, 64, 16, None)
+    x_in = Input(shape=(None, None, 3))
+    x = Lambda(normalize)(x_in)
+
+    x = b = Conv2D(num_filters, 3, padding='same')(x)
+    for i in range(num_res_blocks):
+        b = res_block(b, num_filters, res_block_scaling)
+    b = Conv2D(num_filters, 3, padding='same')(b)
+    x = Add()([x, b])
+
+    x = upsample(x, scale, num_filters)
+    x = Conv2D(3, 3, padding='same')(x)
+
+    x = Lambda(denormalize)(x)
+    return Model(x_in, x, name=model_name)
+#    # 忘了怎架 R block 果斷放棄
+#    input_img = Input(shape)
+#    # https://github.com/krasserm/super-resolution/blob/master/example-edsr.ipynb
+#    # https://github.com/krasserm/super-resolution/blob/master/model/edsr.py
+#    # https://github.com/krasserm/super-resolution/blob/master/model/common.py
+#    # construct the autoencoder model
+#    outputModel = Model(inputs=input_img, outputs=layer_output)
+#    return outputModel
 
 #%%
 k = 32
-model1 = MakeModel_TEST(shape=(k, k, 3))
+model1 = Model_TEST(model_name="x32-x64_model")
 model1.summary()
-model1.name = "modea1_x2"
 
 #k = 64
 #model2 = MakeModel_TEST(shape=(k, k, 3))
@@ -98,7 +111,7 @@ model1.save(saveFolder + '%s_e%d_b%d.h5'%(model1.name, epochs, batch_size))
 #partModel_2.save(partModel_2.name+'.h5')
 #%% USE
 predict1 = model1.predict(dataSet["dataset32_x"][:5,:])
-predict1_img = predict1[0]#.reshape(5, 64, 64, 3)
+#predict1_img = predict1[0]#.reshape(5, 64, 64, 3)
 #predict2 = partModel_1.predict(predict1_img)
 #predict2_img = predict2[0]#.reshape(5, 64, 64, 3)
 
