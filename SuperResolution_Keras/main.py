@@ -74,6 +74,7 @@ def Model_TEST(scale=2, num_filters=64, num_res_blocks=8, res_block_scaling=None
 k = 32
 model1 = Model_TEST(model_name="x32-x64_model")
 model1.summary()
+model1.compile('adam',loss='mse')
 
 #k = 64
 #model2 = MakeModel_TEST(shape=(k, k, 3))
@@ -90,8 +91,11 @@ itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 for epoch in range(epochs):
     batch_index = 0
     for step in range(itr): #936
-        batch_in = GetData(dataSet, "dataset32_x",  batch_index, batch_size, index_shuffle) # 未 /255
-        batch_mid = GetData(dataSet, "dataset64_x",  batch_index, batch_size, index_shuffle)
+        batch_in  = dataSet["dataset32_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
+        batch_mid = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
+#        batch_out = dataSet["dataset128_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)/255.0
+#        batch_in = GetData(dataSet, "dataset32_x",  batch_index, batch_size, index_shuffle) # 未 /255
+#        batch_mid = GetData(dataSet, "dataset64_x",  batch_index, batch_size, index_shuffle)
 #        batch_out = GetData(dataSet, "dataset128_x",  batch_index, batch_size, index_shuffle)
         batch_index += batch_size
         
