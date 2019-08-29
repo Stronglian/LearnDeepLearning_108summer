@@ -18,7 +18,7 @@ tf.keras.backend.set_session(sess)
 #%%
 #from keras import backend as K
 from keras.models import Model#, Sequential
-from keras.layers import Conv2DTranspose, Input, Conv2D, Add #, Dense,  Flatten, Activation, MaxPooling2D
+from keras.layers import Conv2DTranspose, Input, Conv2D, Add, Lambda #, Dense,  Flatten, Activation, MaxPooling2D
 from model_collect import res_block, normalize, denormalize, upsample
 ##%%
 #from keras.applications.vgg16 import VGG16
