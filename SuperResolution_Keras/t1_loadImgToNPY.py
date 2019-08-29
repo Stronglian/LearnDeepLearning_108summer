@@ -6,7 +6,7 @@ import numpy as np
 
 from utils_collect import SaveNPY
 
-dataFolder = "D:/UPLOAD/hao/super_resolution_keras/dataset/"
+dataFolder = "../_DataSet/forK/"
 subfolderList = os.listdir(dataFolder)
 
 for _i in range(len(subfolderList)):
