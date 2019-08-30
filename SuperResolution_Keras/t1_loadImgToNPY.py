@@ -6,7 +6,7 @@ import numpy as np
 
 from utils_collect import SaveNPY
 
-dataFolder = "D:/UPLOAD/hao/super_resolution_keras/dataset/"
+dataFolder = "../_DataSet/forK/"
 subfolderList = os.listdir(dataFolder)
 
 for _i in range(len(subfolderList)):
@@ -22,7 +22,7 @@ except:
 
 for i in range(len(subfolderList)): #i = 0
     subfolder = subfolderList[i]
-    tmpFolderList = os.listdir(dataFolder + "/" + subfolder)
+    tmpFolderList = np.sort(os.listdir(dataFolder + "/" + subfolder))
     imgList = list()
     imgCountList = list()
     for j in range(len(tmpFolderList)): #j = 0

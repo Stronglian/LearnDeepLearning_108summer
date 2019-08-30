@@ -7,3 +7,5 @@ SuperResolution_Keras/datasetNPY/dataset128.npy
 SuperResolution_Keras/datasetNPY/dataset32.npy
 SuperResolution_Keras/doc/*
 *.pyc
+dataset_for_torch.zip
+dataset_for_keras.zip
