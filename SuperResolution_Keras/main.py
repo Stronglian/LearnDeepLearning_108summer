@@ -120,17 +120,17 @@ for epoch in range(epochs):
 #            print('3- total_loss:%7.4f loss:'%(loss3[0]), loss3[1:])
         if loss1 < minLoss1:
             minLoss1 = loss1
-            model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model1.name, epochs, batch_size, loss1))
-        if loss2 < minLoss:
+            model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
+        if loss2 < minLoss2:
             minLoss2 = loss2
-            model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model1.name, epochs, batch_size, loss1))
-            model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model2.name, epochs, batch_size, loss2))
+            model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
+            model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
 
     print('==========epcohs: %d, loss1: %.5f, loss2:, %.5f'%(epoch, loss1, loss2))
     
 #%% SAVE MODEL
-model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model1.name, epochs, batch_size, loss1))
-model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model2.name, epochs, batch_size, loss2))
+model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
+model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
 #partModel_2.save(partModel_2.name+'.h5')
 #%% USE
 predict1 = model1.predict(dataSet["dataset32_x"][:5,:])
