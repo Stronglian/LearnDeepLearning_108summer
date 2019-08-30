@@ -18,7 +18,7 @@ tf.keras.backend.set_session(sess)
 #%%
 #from keras import backend as K
 from keras.models import Model#, Sequential
-from keras.layers import Conv2DTranspose, Input, Conv2D, Add, Lambda #, Dense,  Flatten, Activation, MaxPooling2D
+from keras.layers import Input, Conv2D, Add, Lambda #, Dense,  Flatten, Activation, MaxPooling2D
 from model_collect import res_block, normalize, denormalize, upsample
 ##%%
 #from keras.applications.vgg16 import VGG16
@@ -37,7 +37,7 @@ saveFolder = "./w/"
 try:
     os.makedirs(saveFolder)
 except:
-    print( saveFolder, "is exsist.")
+    print("saveFolder", saveFolder, "is exsist.")
 #%% LOAD DATASET
 dataSet = dict()
 for _n in subfolderList:
@@ -82,17 +82,18 @@ model1.summary()
 model1.compile('adam',loss='mse')
 
 #k = 64
-_, model2 = Model_TEST(model_name="x64-x128_model", x_in=m_branch)
+#_, model2 = Model_TEST(model_name="x32-x128_model", x_in=m_branch)
+_, model2 = Model_TEST(model_name="x64-x128_model")
 model2.summary()
 model2.compile('adam',loss='mse')
 
-
+#model3 = Model(input = model1.input, output = [m_branch, model2.output])
 #%% train parm set
 epochs = 10
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 
-minLoss1 = minLoss2 = 10000000
+minLoss1 = minLoss2 = None
 #%% TRAIN #要照她的嗎? https://github.com/krasserm/super-resolution/blob/master/train.py
 for epoch in range(epochs):
     batch_index = 0
@@ -108,7 +109,8 @@ for epoch in range(epochs):
         
 #        
         loss1 = model1.train_on_batch(batch_in, batch_mid)
-        loss2 = model2.train_on_batch(batch_in, batch_out)
+#        loss2 = model2.train_on_batch(batch_in, batch_out)
+        loss2 = model2.train_on_batch(batch_mid, batch_out)
         
         if step%100 == 0 :
             print("itr: %d loss1: %d, loss2: %d"%(step, loss1, loss2))
@@ -116,19 +118,19 @@ for epoch in range(epochs):
 #            print('itr:%4d, \n1- total_loss:%7.4f loss:'%(step, loss1[0]), loss1[1:])
 #            print('2- total_loss:%7.4f loss:'%(loss2[0]), loss2[1:])
 #            print('3- total_loss:%7.4f loss:'%(loss3[0]), loss3[1:])
-        if loss1 < minLoss1:
+        if loss1 < minLoss1 or loss1 is None:
             minLoss1 = loss1
-            model1.save(saveFolder + '%s_e%d_b%d_lo%.5f.h5'%(model1.name, epochs, batch_size, loss1))
-        if loss2 < minLoss2:
+            model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model1.name, epochs, batch_size, loss1))
+        if loss2 < minLoss2 or loss2 is None:
             minLoss2 = loss2
-            model1.save(saveFolder + '%s_e%d_b%d_lo%.5f.h5'%(model1.name, epochs, batch_size, loss1))
-            model2.save(saveFolder + '%s_e%d_b%d_lo%.5f.h5'%(model2.name, epochs, batch_size, loss2))
+            model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model1.name, epochs, batch_size, loss1))
+            model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model2.name, epochs, batch_size, loss2))
 
     print('==========epcohs: %d, loss1: %.5f, loss2:, %.5f'%(epoch, loss1, loss2))
     
 #%% SAVE MODEL
-model1.save(saveFolder + '%s_e%d_b%d_lo%.5f.h5'%(model1.name, epochs, batch_size, loss1))
-model2.save(saveFolder + '%s_e%d_b%d_lo%.5f.h5'%(model2.name, epochs, batch_size, loss2))
+model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model1.name, epochs, batch_size, loss1))
+model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model2.name, epochs, batch_size, loss2))
 #partModel_2.save(partModel_2.name+'.h5')
 #%% USE
 predict1 = model1.predict(dataSet["dataset32_x"][:5,:])
