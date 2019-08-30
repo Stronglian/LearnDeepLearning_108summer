@@ -93,7 +93,7 @@ epochs = 10
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 
-minLoss1 = minLoss2 = None
+minLoss1 = minLoss2 = 100000000000
 #%% TRAIN #要照她的嗎? https://github.com/krasserm/super-resolution/blob/master/train.py
 for epoch in range(epochs):
     batch_index = 0
@@ -118,10 +118,10 @@ for epoch in range(epochs):
 #            print('itr:%4d, \n1- total_loss:%7.4f loss:'%(step, loss1[0]), loss1[1:])
 #            print('2- total_loss:%7.4f loss:'%(loss2[0]), loss2[1:])
 #            print('3- total_loss:%7.4f loss:'%(loss3[0]), loss3[1:])
-        if loss1 < minLoss1 or loss1 is None:
+        if loss1 < minLoss1:
             minLoss1 = loss1
             model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model1.name, epochs, batch_size, loss1))
-        if loss2 < minLoss2 or loss2 is None:
+        if loss2 < minLoss:
             minLoss2 = loss2
             model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model1.name, epochs, batch_size, loss1))
             model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(model2.name, epochs, batch_size, loss2))
