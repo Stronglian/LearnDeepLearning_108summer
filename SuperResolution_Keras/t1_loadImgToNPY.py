@@ -22,7 +22,7 @@ except:
 
 for i in range(len(subfolderList)): #i = 0
     subfolder = subfolderList[i]
-    tmpFolderList = os.listdir(dataFolder + "/" + subfolder)
+    tmpFolderList = np.sort(os.listdir(dataFolder + "/" + subfolder))
     imgList = list()
     imgCountList = list()
     for j in range(len(tmpFolderList)): #j = 0
