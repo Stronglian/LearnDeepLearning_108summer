@@ -66,6 +66,8 @@ https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/369869/
 https://www.programiz.com/python-programming/time
 """
 import time
+#import pytz
+#us = pytz.timezone('US/Pacific')
 class OWNLogger:
     def __init__(self, logNPY = None):
         self.dictLog = dict()
