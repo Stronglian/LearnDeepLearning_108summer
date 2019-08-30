@@ -20,6 +20,7 @@ def show_result(img_list):
     for _i in range(len(img_list)):
 #     plt.imshow(img_list[_i,:,:,::-1])
         plt.imshow(img_list[_i])
+        plt.axis('off')
         plt.show()
     return
 
