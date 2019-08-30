@@ -6,14 +6,21 @@ import json
 import os
 #from PIL im
 #%%
-def show_photo(img):
-    plt.figure(figsize=(15, 15))
-    for i in range(1,8):
-        image = img[i,:,:]
-        plt.subplot(8, 8, i)
-        plt.axis('off')
-        plt.imshow(image)
-    plt.show()
+#def show_photo(img):
+#    plt.figure(figsize=(15, 15))
+#    for i in range(1,8):
+#        image = img[i,:,:]
+#        plt.subplot(8, 8, i)
+#        plt.axis('off')
+#        plt.imshow(image)
+#    plt.show()
+#    return
+def show_result(img_list):
+    img_list = img_list.clip(0, 255).astype(np.int)
+    for _i in range(len(img_list)):
+#     plt.imshow(img_list[_i,:,:,::-1])
+        plt.imshow(img_list[_i])
+        plt.show()
     return
 
 #%%
@@ -104,6 +111,9 @@ class OWNLogger:
 #%%
     
 if __name__ == "__main__":
-    t = OWNLogger()
-    t.ShowLocalTime()
+#    t = OWNLogger()
+#    t.ShowLocalTime()
+    plt.axis('off')
+    plt.show()
+    
     pass
