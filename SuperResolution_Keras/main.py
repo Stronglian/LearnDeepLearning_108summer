@@ -124,14 +124,14 @@ for epoch in range(epochs):
 #            print('2- total_loss:%7.4f loss:'%(loss2[0]), loss2[1:])
 #            print('3- total_loss:%7.4f loss:'%(loss3[0]), loss3[1:])
         if loss1 < minLoss1:
-            print("save model1")
             minLoss1 = loss1
             if epoch > 0:
+                print("save model1")
                 model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
         if loss2 < minLoss2 and epoch > 0:
-            print("save model1, model2")
             minLoss2 = loss2
             if epoch > 0:
+                print("save model1, model2")
                 model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
                 model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
 
