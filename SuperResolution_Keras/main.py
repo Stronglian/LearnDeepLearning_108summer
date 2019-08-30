@@ -50,7 +50,7 @@ index_shuffle = np.random.shuffle(index_shuffle)
 #%% MODEL
 # mainModel
 def Model_TEST(scale=2, num_filters=64, num_res_blocks=8, res_block_scaling=None, model_name = None, x_in = None): #origin (4, 64, 16, None)
-    if not None:
+    if x_in not None:
         x_in = Input(shape=(None, None, 3))
     x = Lambda(normalize)(x_in)
 
