@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from utils_collect import LoadNPY, GetData, OWNLogger
+from utils_collect import LoadNPY, GetData, OWNLogger, show_result
 import os 
 import numpy as np
 import tensorflow as tf
@@ -91,7 +91,7 @@ model2.compile('adam',loss='mse')
 
 #model3 = Model(input = model1.input, output = [m_branch, model2.output])
 #%% train parm set
-epochs = 10
+epochs = 5
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 print("epoch: %d, batch_szie: %d, itr max: %d"%(epochs, batch_size, itr))
@@ -126,12 +126,14 @@ for epoch in range(epochs):
         if loss1 < minLoss1:
             print("save model1")
             minLoss1 = loss1
-            model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
-        if loss2 < minLoss2:
+            if epoch > 0:
+                model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
+        if loss2 < minLoss2 and epoch > 0:
             print("save model1, model2")
             minLoss2 = loss2
-            model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
-            model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
+            if epoch > 0:
+                model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
+                model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
 
     print('==========epcohs: %d, loss1: %.5f, loss2:, %.5f'%(epoch, loss1, loss2))
     log.SetLogTime("e%2d"%(epoch), mode = "end")
@@ -145,4 +147,4 @@ predict1 = model1.predict(dataSet["dataset32_x"][:5,:])
 #predict1_img = predict1[0]#.reshape(5, 64, 64, 3)
 predict2 = model2.predict(dataSet["dataset64_x"][:5,:])
 #predict2_img = predict2[0]#.reshape(5, 64, 64, 3)
-
+predictFinal = model2.predict(predict1)
