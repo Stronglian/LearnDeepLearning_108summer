@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from utils_collect import LoadNPY, GetData
+from utils_collect import LoadNPY, GetData, OWNLogger
 import os 
 import numpy as np
 import tensorflow as tf
@@ -33,11 +33,13 @@ DICT_FLOW_NAME = {1:"載入資料庫",
 dataFolder = "./datasetNPY/"
 subfolderList = os.listdir(dataFolder)
 #os.listdir(dataFolder+subfolderList[0])
-saveFolder = "./w/"
+saveFolder = "./w2/"
 try:
     os.makedirs(saveFolder)
 except:
     print("saveFolder", saveFolder, "is exsist.")
+
+log = OWNLogger(logNPY = saveFolder)
 #%% LOAD DATASET
 dataSet = dict()
 for _n in subfolderList:
@@ -92,11 +94,14 @@ model2.compile('adam',loss='mse')
 epochs = 10
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
-
+print("epoch: %d, batch_szie: %d, itr max: %d"%(epochs, batch_size, itr))
 minLoss1 = minLoss2 = 100000000000
+log.ShowLocalTime()
+log.SetLogTime("train")
 #%% TRAIN #要照她的嗎? https://github.com/krasserm/super-resolution/blob/master/train.py
 for epoch in range(epochs):
     batch_index = 0
+    log.SetLogTime("e%2d"%(epoch))
     print("epoch", epoch)
     for step in range(itr): #936
         batch_in  = dataSet["dataset32_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
@@ -119,22 +124,25 @@ for epoch in range(epochs):
 #            print('2- total_loss:%7.4f loss:'%(loss2[0]), loss2[1:])
 #            print('3- total_loss:%7.4f loss:'%(loss3[0]), loss3[1:])
         if loss1 < minLoss1:
+            print("save model1")
             minLoss1 = loss1
             model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
         if loss2 < minLoss2:
+            print("save model1, model2")
             minLoss2 = loss2
             model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
             model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
 
     print('==========epcohs: %d, loss1: %.5f, loss2:, %.5f'%(epoch, loss1, loss2))
-    
+    log.SetLogTime("e%2d"%(epoch), mode = "end")
 #%% SAVE MODEL
 model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
 model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
+log.SetLogTime("train", mode = "end")
 #partModel_2.save(partModel_2.name+'.h5')
 #%% USE
 predict1 = model1.predict(dataSet["dataset32_x"][:5,:])
 #predict1_img = predict1[0]#.reshape(5, 64, 64, 3)
-predict2 = model2.predict(dataSet["dataset32_x"][:5,:])
+predict2 = model2.predict(dataSet["dataset64_x"][:5,:])
 #predict2_img = predict2[0]#.reshape(5, 64, 64, 3)
 
