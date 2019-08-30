@@ -18,8 +18,8 @@ import os
 def show_result(img_list):
     img_list = img_list.clip(0, 255).astype(np.int)
     for _i in range(len(img_list)):
-#     plt.imshow(img_list[_i,:,:,::-1])
-        plt.imshow(img_list[_i])
+     plt.imshow(img_list[_i,:,:,::-1])
+#        plt.imshow(img_list[_i])
         plt.axis('off')
         plt.show()
     return
