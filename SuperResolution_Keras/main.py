@@ -91,7 +91,7 @@ model2.compile('adam',loss='mse')
 
 #model3 = Model(input = model1.input, output = [m_branch, model2.output])
 #%% train parm set
-epochs = 5
+epochs = 10
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 print("epoch: %d, batch_szie: %d, itr max: %d"%(epochs, batch_size, itr))

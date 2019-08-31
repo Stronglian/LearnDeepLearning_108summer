@@ -25,6 +25,9 @@ def show_result(img_list):
     return
 
 def show_result_row(img_list):
+    """
+    還要再處理輸出照片大小
+    """
     img_list = img_list.clip(0, 255).astype(np.int)
     img_out = img_list[0,:,:,::-1].copy()
     for _i in range(1, len(img_list)):
