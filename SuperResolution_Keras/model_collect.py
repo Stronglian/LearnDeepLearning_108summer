@@ -74,6 +74,9 @@ def denormalize(x, rgb_mean=DIV2K_RGB_MEAN):
 def psnr(x1, x2):
     return tf.image.psnr(x1, x2, max_val=255)
 
+def ssim(x1, x2):
+    return tf.image.ssim(x1, x2, max_val=255)
+
 
 # ---------------------------------------
 #  See https://arxiv.org/abs/1609.05158
