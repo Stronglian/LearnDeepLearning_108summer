@@ -18,10 +18,21 @@ import os
 def show_result(img_list):
     img_list = img_list.clip(0, 255).astype(np.int)
     for _i in range(len(img_list)):
-     plt.imshow(img_list[_i,:,:,::-1])
+        plt.imshow(img_list[_i,:,:,::-1])
 #        plt.imshow(img_list[_i])
         plt.axis('off')
         plt.show()
+    return
+
+def show_result_row(img_list):
+    img_list = img_list.clip(0, 255).astype(np.int)
+    img_out = img_list[0,:,:,::-1].copy()
+    for _i in range(1, len(img_list)):
+        img_tmp = img_list[_i, :, :, ::-1].copy()
+        img_out = np.concatenate((img_out, img_tmp), axis=1)
+    plt.imshow(img_out)
+    plt.axis('off')
+    plt.show()
     return
 
 #%%
@@ -69,8 +80,14 @@ import time
 #import pytz
 #us = pytz.timezone('US/Pacific')
 class OWNLogger:
-    def __init__(self, logNPY = None):
+    def __init__(self, logNPY = None, lossName = list()):
+        # Dict
         self.dictLog = dict()
+        self.dictLog["time"] = dict()
+        self.dictLog["loss"] = dict()
+        for _l in lossName:
+            self.dictLog["loss"][_l] = list()
+        # SAVE
         if logNPY is None:
             self.logNPY = "./log_from%s.npy"%(self.ShowLocalTime())
         elif logNPY[-1] == '/':
@@ -80,25 +97,7 @@ class OWNLogger:
     def __del__(self):
         self.SaveLog2NPY()
         return
-    
-    def SetLogTime(self, tag, mode = "start"):
-        """
-        mode:
-            "start"
-            "end"
-        tag
-        """
-        self.dictLog[tag+"_"+mode] = time.time()
-        if mode == "end":
-            if tag+"_start" not in list(self.dictLog.keys()):
-                raise ValueError("%s_start not in LOG"%(tag))
-            print("%s, It cost %.5f sec."%(tag, self.dictLog[tag+"_end"] - self.dictLog[tag+"_start"]))
-        return
-    def ShowDateTime(self, intput_time_struct):
-        print(time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct))
-        return time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct)
-    def ShowLocalTime(self):
-        return self.ShowDateTime(time.localtime())
+    # SAVE
     def SaveLog2NPY(self):
         np.save(self.logNPY, self.dictLog)
         return
@@ -107,10 +106,40 @@ class OWNLogger:
             self.dictLog = np.load(nameNPY, allow_pickle=True).item()
         return
     def ShowAllLog(self):
-        print("Dict", self.logNPY)
+        print("Dict:", self.logNPY)
         for _key in list(self.dictLog.keys()):
-            print(_key, time.ctime(self.dictLog[_key]))
+            for _key2 in list(self.dictLog[_key].keys()):
+                print(_key, _key2, time.ctime(self.dictLog[_key][_key2]))
         return
+    # TIME
+    def SetLogTime(self, tag, mode = "start"):
+        """
+        mode:
+            "start"
+            "end"
+        tag
+        """
+        self.dictLog["time"][tag+"_"+mode] = time.time()
+        if mode == "end":
+            if tag+"_start" not in list(self.dictLog["time"].keys()):
+                raise ValueError("%s_start not in LOG"%(tag))
+            print("%s, It cost %.5f sec."%(tag, self.dictLog["time"][tag+"_end"] - self.dictLog["time"][tag+"_start"]))
+        return
+    def ShowDateTime(self, intput_time_struct):
+        print(time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct))
+        return time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct)
+    def ShowLocalTime(self):
+        return self.ShowDateTime(time.localtime())
+    # LoSS
+    def AppendLossIn(self, lossName, lossValue):
+        if lossName not in list(self.dictLog["loss"].keys()):
+            raise ValueError("%s not in loss list"%(lossName))
+        self.dictLog["loss"][lossName].append(lossValue)
+        return
+    def ShowLineChart(self, lossName):
+        """折線圖顯示
+        """
+        pass
 #%%
     
 if __name__ == "__main__":
