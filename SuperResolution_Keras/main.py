@@ -29,10 +29,7 @@ DICT_FLOW_NAME = {1:"載入資料庫",
                   2:"",
                   3:""}
 
-#%%
-dataFolder = "./datasetNPY/"
-subfolderList = os.listdir(dataFolder)
-#os.listdir(dataFolder+subfolderList[0])
+#%% logger 
 saveFolder = "./w3/"
 try:
     os.makedirs(saveFolder)
@@ -41,13 +38,15 @@ except:
 
 log = OWNLogger(logNPY = saveFolder, lossName=["loss_32-64", "loss_64-128", "loss_32-128"])
 #%% LOAD DATASET
+dataFolder = "./datasetNPY/"
+subfolderList = os.listdir(dataFolder)
 dataSet = dict()
 for _n in subfolderList:
     tmpDict = LoadNPY(dataFolder+_n)
     dataSet.update(tmpDict)
 #shuffle
 index_shuffle = np.array([i for i in range(len(dataSet["dataset32_x"]))], dtype=np.int)
-index_shuffle = np.random.shuffle(index_shuffle)
+np.random.shuffle(index_shuffle)
 #
 #%% MODEL
 # mainModel
@@ -104,17 +103,16 @@ for epoch in range(epochs):
     log.SetLogTime("e%2d"%(epoch))
     print("epoch", epoch)
     for step in range(itr): #936
-        batch_in  = dataSet["dataset32_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
-        batch_mid = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
-        batch_out = dataSet["dataset128_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
-#        batch_in = GetData(dataSet, "dataset32_x",  batch_index, batch_size, index_shuffle) # 未 /255
-#        batch_mid = GetData(dataSet, "dataset64_x",  batch_index, batch_size, index_shuffle)
-#        batch_out = GetData(dataSet, "dataset128_x",  batch_index, batch_size, index_shuffle)
+#        batch_in  = dataSet["dataset32_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
+#        batch_mid = dataSet["dataset64_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
+#        batch_out = dataSet["dataset128_x"][batch_index : batch_index+batch_size,:,:].astype(np.float)
+        batch_in = GetData(dataSet, "dataset32_x",  batch_index, batch_size, index_shuffle) # 未 /255
+        batch_mid = GetData(dataSet, "dataset64_x",  batch_index, batch_size, index_shuffle)
+        batch_out = GetData(dataSet, "dataset128_x",  batch_index, batch_size, index_shuffle)
         batch_index += batch_size
         
 #        
         loss1 = model1.train_on_batch(batch_in, batch_mid)
-#        loss2 = model2.train_on_batch(batch_in, batch_out)
         loss2 = model2.train_on_batch(batch_mid, batch_out)
         loss3 = model2.train_on_batch(model1.predict(batch_in), batch_out)
         
@@ -125,22 +123,25 @@ for epoch in range(epochs):
 #            print('2- total_loss:%7.4f loss:'%(loss2[0]), loss2[1:])
 #            print('3- total_loss:%7.4f loss:'%(loss3[0]), loss3[1:])
         if loss1 < minLoss1:
-            minLoss1 = loss1
+            print("e%d min %s: %.3f -> %.3f"%(epoch, "loss1", minLoss1, loss1))
             if epoch > 0:
                 print("save model1")
                 model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
+            minLoss1 = loss1
         if loss2 < minLoss2 and epoch > 0:
-            minLoss2 = loss2
+            print("e%d min %s: %.3f -> %.3f"%(epoch, "loss2", minLoss2, loss2))
             if epoch > 0:
                 print("save model1, model2")
                 model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
                 model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
+            minLoss2 = loss2
         if loss3 < minLoss3 and epoch > 0:
-            minLoss3 = loss3
+            print("e%d min %s: %.3f -> %.3f"%(epoch, "loss3", minLoss3, loss3))
             if epoch > 0:
                 print("save model1, model2")
                 model1.save_weights(saveFolder + 'e%d_%s_b%d_3_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
                 model2.save_weights(saveFolder + 'e%d_%s_b%d_3_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
+            minLoss3 = loss3
         # save weight
         model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
         model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
@@ -150,6 +151,8 @@ for epoch in range(epochs):
         log.AppendLossIn("loss_32-128", loss3)
         
     print('==========epcohs: %d, loss1: %.5f, loss2:, %.5f'%(epoch, loss1, loss2))
+    # epoch 結束後，shuffle
+    np.random.shuffle(index_shuffle)
     log.SetLogTime("e%2d"%(epoch), mode = "end")
 #%% SAVE MODEL
 model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
@@ -159,7 +162,5 @@ log.SetLogTime("train", mode = "end")
 log.SaveLog2NPY()
 #%% USE
 predict1 = model1.predict(dataSet["dataset32_x"][:5,:])
-#predict1_img = predict1[0]#.reshape(5, 64, 64, 3)
 predict2 = model2.predict(dataSet["dataset64_x"][:5,:])
-#predict2_img = predict2[0]#.reshape(5, 64, 64, 3)
 predictFinal = model2.predict(predict1)
