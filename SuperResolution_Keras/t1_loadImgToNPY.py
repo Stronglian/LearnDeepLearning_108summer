@@ -22,6 +22,14 @@ except:
 
 for i in range(len(subfolderList)): #i = 0
     subfolder = subfolderList[i]
+    if saveFolder + subfolder+".npy":
+        print(saveFolder + subfolder+".npy", "is exist. if need to reload, DEL it first.")
+        tmp = str(input("Overwrite it?(Y/[N])"))
+        if len(tmp) != 0:
+            if not (tmp == "Y" or tmp == "y"):
+                continue
+        else:
+            continue
     tmpFolderList = np.sort(os.listdir(dataFolder + "/" + subfolder))
     imgList = list()
     imgCountList = list()
@@ -31,8 +39,6 @@ for i in range(len(subfolderList)): #i = 0
         imgTmp  = cv2.imread(dataFolder + "/" + subfolder + "/" + imgName)
         imgList.append(imgTmp)
         imgCountList.append(int(imgName.split("(", 1)[1].split(")", 1)[0]))
-#        if j == 20:
-#            break
     # save
     dictTmp = dict()
     dictTmp[subfolder + "_x"] = np.array(imgList)
