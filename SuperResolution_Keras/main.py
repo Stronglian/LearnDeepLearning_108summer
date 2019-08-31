@@ -39,7 +39,7 @@ try:
 except:
     print("saveFolder", saveFolder, "is exsist.")
 
-log = OWNLogger(logNPY = saveFolder, lossName=["loss_32-64", "loss_64-128", "loass_32-128"])
+log = OWNLogger(logNPY = saveFolder, lossName=["loss_32-64", "loss_64-128", "loss_32-128"])
 #%% LOAD DATASET
 dataSet = dict()
 for _n in subfolderList:
@@ -91,7 +91,7 @@ model2.compile('adam',loss='mse')
 
 #model3 = Model(input = model1.input, output = [m_branch, model2.output])
 #%% train parm set
-epochs = 10
+epochs = 40
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
 print("epoch: %d, batch_szie: %d, itr max: %d"%(epochs, batch_size, itr))
