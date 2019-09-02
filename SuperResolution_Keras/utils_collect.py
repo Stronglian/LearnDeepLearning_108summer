@@ -74,6 +74,50 @@ def GetData(dict_input, dict_key,  batch_index, batch_size, index_shuffle, dtype
 #    return batch_data
     return dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size], :, :].astype(dtype)
 
+class DataLoader:
+    def __init__(self, dataFolder):
+        """
+        當作資料夾裡面是乾淨的來做
+        """
+#        dataFolder = "./datasetNPY/"
+        self.dataFolder = dataFolder
+        self.UpdateDataset(dataFolder);
+        # shuffle
+        self.ShuffleIndex(index_shuffle = None, boolReset=True);
+#        self.ShuffleIndex();
+        # 分配 valid，看是要指定，還是直接取隨機
+        return
+    def UpdateDataset(self, dataFolder, boolNew = True):
+        subfolderList = os.listdir(dataFolder)
+        if boolNew:
+            self.dataSet = dict()
+        for _n in subfolderList:
+            tmpDict = LoadNPY(dataFolder+_n)
+            self.dataSet.update(tmpDict)
+        del tmpDict
+        return
+    def ShuffleIndex(self, index_shuffle = None, boolReset=False):
+        """
+        沒參數直接 call 就是 重新 shuffle 要數列而已。
+        """
+        if boolReset:
+            self.index_shuffle = np.array([i for i in range(len(self.dataSet[list(self.dataSet.keys())[0]]))], dtype=np.int)
+        if index_shuffle is None:
+            index_shuffle = self.index_shuffle
+        np.random.shuffle(index_shuffle);
+        return
+#    def ShuffleIndex(self, boolReset = False):
+#        if boolReset:
+#            self.index_shuffle = np.array([i for i in range(len(self.dataSet[list(self.dataSet.keys())[0]]))], dtype=np.int)
+#        np.random.shuffle(self.index_shuffle);
+#        return
+    def GetData(self, dict_key,  batch_index, batch_size, dtype = np.float):
+        return self.dataSet[dict_key][self.index_shuffle[batch_index : batch_index+batch_size], :, :].astype(dtype)
+    def GetLen(self, d_type = "train"):
+        """
+        獲取指定資料數量
+        """
+        pass
 #%% Time
 """
 https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/369869/
@@ -128,8 +172,9 @@ class OWNLogger:
                 raise ValueError("%s_start not in LOG"%(tag))
             print("%s, It cost %.5f sec."%(tag, self.dictLog["time"][tag+"_end"] - self.dictLog["time"][tag+"_start"]))
         return
-    def ShowDateTime(self, intput_time_struct):
-        print(time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct))
+    def ShowDateTime(self, intput_time_struct, boolPrint = True):
+        if boolPrint:
+            print(time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct))
         return time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct)
     def ShowLocalTime(self):
         return self.ShowDateTime(time.localtime())
