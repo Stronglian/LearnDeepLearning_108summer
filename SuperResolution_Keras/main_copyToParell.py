@@ -163,7 +163,7 @@ for epoch in range(epochs):
     log.SetLogTime("e%2d"%(epoch), mode = "end")
     print('==========epcohs: %d, loss1: %.5f, loss2:, %.5f, loss3:, %.5f ======='%(epoch, loss1, loss2, loss3))
     # epoch 結束後，shuffle
-    if epoch % 10 == 0:
+    if epoch % 3 == 0:
         np.random.shuffle(index_shuffle)
 #%% SAVE MODEL 上面存過了
 #model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))

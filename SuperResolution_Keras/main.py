@@ -145,11 +145,11 @@ for epoch in range(epochs):
         # save weight
         model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
         model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
-        # save loss
-        log.AppendLossIn("loss_32-64", loss1)
-        log.AppendLossIn("loss_64-128", loss2)
-        log.AppendLossIn("loss_32-128", loss3)
-        
+    # save loss # 存 epoch 就好
+    log.AppendLossIn("loss_32-64", loss1)
+    log.AppendLossIn("loss_64-128", loss2)
+    log.AppendLossIn("loss_32-128", loss3)
+    
     print('==========epcohs: %d, loss1: %.5f, loss2:, %.5f'%(epoch, loss1, loss2))
     # epoch 結束後，shuffle
     np.random.shuffle(index_shuffle)
