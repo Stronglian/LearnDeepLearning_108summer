@@ -127,11 +127,12 @@ import time
 #import pytz
 #us = pytz.timezone('US/Pacific')
 class OWNLogger:
-    def __init__(self, logNPY = None, lossName = list()):
+    def __init__(self, logNPY = None, lossName = list(), dictSetting = dict()):
         # Dict
         self.dictLog = dict()
         self.dictLog["time"] = dict()
         self.dictLog["loss"] = dict()
+        self.dictLog["SET"] = dictSetting
         for _l in lossName:
             self.dictLog["loss"][_l] = list()
         # SAVE
@@ -141,16 +142,20 @@ class OWNLogger:
             self.logNPY = "%slog_from%s.npy"%(logNPY, self.ShowLocalTime())
         return
     
-    def __del__(self):
-        self.SaveLog2NPY()
-        return
+#    def __del__(self):
+#        self.SaveLog2NPY()
+#        return
     # SAVE
-    def SaveLog2NPY(self):
+    def SaveLog2NPY(self, boolPrint = False):
+        if boolPrint:
+            print("SaveLog2NPY", self.logNPY)
         np.save(self.logNPY, self.dictLog)
         return
-    def LoadLog(self, nameNPY):
-        if len(list(self.dictLog.keys())) == 0:
-            self.dictLog = np.load(nameNPY, allow_pickle=True).item()
+    def LoadLog(self, nameNPY, boolForce = False):
+        self.logNPY = nameNPY
+        if len(list(self.dictLog.keys())) == 0 or boolForce:
+            self.dictLog = np.load(self.logNPY, allow_pickle=True).item()
+        print("LOAD", self.logNPY)
         return
     def ShowAllLog(self):
         print("Dict:", self.logNPY)
@@ -193,7 +198,58 @@ class OWNLogger:
 if __name__ == "__main__":
 #    t = OWNLogger()
 #    t.ShowLocalTime()
-    plt.axis('off')
-    plt.show()
+#    plt.axis('off')
+#    plt.show()
+    strNPYname = "./w3_NPY/log_from2019-08-31 16_10_45.npy"
+    
+    def plotData(plt, data):
+      x = [p[0] for p in data]
+      y = [p[1] for p in data]
+      plt.plot(x, y, '-o')
+  
+    tmpLogger = OWNLogger() #LOAD 不進來!???
+    tmpLogger.LoadLog(strNPYname, boolForce=True)
+    tmp_dictLog = tmpLogger.dictLog
+#    tmp_dictLog = np.load(strNPYname, allow_pickle=True).item()
+    
+    MAX_SHOW_ALL = 2000
+    MAX_SHOW_MIN = 200
+    def S_Clip(in_list, MAX_SHOW):
+        if max(in_list) > MAX_SHOW:
+            in_list = np.clip(in_list, 0, MAX_SHOW)
+        return in_list
+    for _i, _n_loss in enumerate(tmp_dictLog["loss"].keys()):
+        if _i != 2:
+            continue
+        loss_amount = len(tmp_dictLog["loss"][_n_loss])
+        e_list = [_i for _i in range(loss_amount)]
+        loss_list = tmp_dictLog["loss"][_n_loss].copy()
+        # show value
+        max_loss = np.max(loss_list)
+        min_loss = np.min(loss_list)
+        print("%s, len:%d, max:%d, min:%d"%(_n_loss, loss_amount, max_loss, min_loss))
+        # mack max/min list
+        max_list = []
+        max_num = loss_list[0]
+        min_list = []
+        min_num = loss_list[0]
+        for _l in loss_list:
+            if _l >= max_num:
+                max_num = _l
+            if _l <= min_num:
+                min_num = _l
+            max_list.append(max_num)
+            min_list.append(min_num)
+            
+        # clip
+        if max_loss > MAX_SHOW_ALL:
+            loss_list = np.clip(loss_list, 0, MAX_SHOW_ALL)
+        max_list = S_Clip(max_list, 1000000)
+        min_list = S_Clip(min_list, MAX_SHOW_MIN)
+        # show plt
+        plt.plot(e_list, min_list)#, linewidth=2.5)#, "-o")
+        plt.show()
+#        break
+    
     
     pass
