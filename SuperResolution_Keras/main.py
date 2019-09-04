@@ -16,7 +16,7 @@ sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 # 設定 Keras 使用的 Session
 tf.keras.backend.set_session(sess)
 
-#%%
+#%% keras import
 #from keras import backend as K
 from keras.models import Model#, Sequential
 from keras.layers import Input, Conv2D, Add, Lambda #, Dense,  Flatten, Activation, MaxPooling2D
@@ -33,13 +33,14 @@ DICT_FLOW_NAME = {1:"載入資料庫",
                   6:"評估"}
 #%% 參數設定 - 
 # train
-epochs = 3
+epochs = 3 #25
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_folder = "./"
 model_weight_path = None # list
 #model_weight_path = ["e40_x32-x64_model_b16_lo365.12378_w.h5", None] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
+model_discription = "Y-struct_e+3"
 #%% logger 
-saveFolder = "./result/_e{1:0>2d}_b{2}_{0}/".format("Y-struct", epochs, batch_size)
+saveFolder = "./result/_e{1:0>2d}_b{2}_{0}/".format(model_discription, epochs, batch_size)
 try:
     os.makedirs(saveFolder)
 except:
@@ -74,26 +75,14 @@ def Model_Block(scale = 2, num_filters = 64, num_res_blocks = 8, res_block_scali
     x = Lambda(denormalize)(x)
 #    return b2, Model(input = x_in, output = x, name=model_name)
     return x_in, x, b2 # in, out, branch
-#%% 
+#%% MODEL compile
 x_in, x_64,  m_branch = Model_Block(name_id="_32-64") # 32-64
 _,    x_128, _        = Model_Block(x_in = m_branch, name_id = "_64-128") # 64-128
 #model_all = Model(input = x_in, output = {"to64":x_64, "to128":x_128}, name = "x32to64to128")
 model_all = Model(input = x_in, output = [x_64, x_128], name = "x32to64to128_model")
-#model_all.compile(optimizer='adam', loss = {"to64":'mse', "to128":'mse'}, name = "x32to64to128")
+#model_all.compile(optimizer='adam', loss = {"to64":'mse', "to128":'mse'})
 model_all.compile(optimizer='adam', loss = ['mse', 'mse'])
 model_all.summary()
-#%%
-#m_branch, model1 = Model_TEST(model_name = "x32-x64_model")
-#model1.summary()
-#model1.compile('adam', loss = 'mse')
-#
-#_, model2 = Model_TEST(model_name = "x32-x128_model", x_in = m_branch)
-##_, model2 = Model_TEST(model_name = "x64-x128_model")
-#model2.summary()
-#model2.compile('adam', loss = 'mse')
-
-#model3 = Model(input = model1.input, output = [model1.output, model2.output])
-#model3.compile(optimizer='adam',loss=['mse', 'mse'])
 #%% LOAD MODEL
 if model_weight_path and (7 in INT_FLOW_CONTROL):
     model_all.load_weights(model_weight_folder +model_weight_path[0], by_name=True)
@@ -149,7 +138,11 @@ for _i in range(AMOUNT_OUT):
 # LOG
 log.ShowLocalTime()
 log.SetLogTime("train")
-log.UpdateProgSetting(itrMax = itr_max, batch_size = batch_size, epochs = epochs, model_weight_path = model_weight_path)
+log.UpdateProgSetting(itrMax = itr_max, 
+                      batch_size = batch_size, 
+                      epochs = epochs, 
+                      model_weight_path = model_weight_path,
+                      model_discription = model_discription)
 # SET
 strShowLoss = "e%02d it%03d %s: %s %.3f <- %.3f"
 strModelName_Loss = 'e%d_%s_b%d_lo%d_%.5f_w.h5'
@@ -174,7 +167,7 @@ for epoch in range(epochs):
                     print("save model")
                     model_all.save_weights(saveFolder + strModelName_Loss%(epoch, model_all.name, batch_size, _l_i, loss_out[_l_i]))
     # 可能要用 PSENR SSIM 來評估 除存與否
-    log.SetLogTime("e%2d_Valid"%(epoch), boolPrint=True)
+    log.SetLogTime("e%02d_Valid"%(epoch), boolPrint=True)
     remainingIndex = (step+1)*batch_size
     batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, ctype = "remaining")
     batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, ctype = "remaining")
@@ -186,11 +179,10 @@ for epoch in range(epochs):
     ten_psnr[0], ten_ssim[0] = Cal_PSNR_SSIM(predit_eval[0], batch_mid)
     ten_psnr[1], ten_ssim[1] = Cal_PSNR_SSIM(predit_eval[1], batch_out)
     ## (最可能出問題)計算
-    init_op = tf.initialize_all_variables() # 不知道會不會影響 KERAS????!?!?!??!?!
+#    init_op = tf.global_variables_initializer() # 不知道會不會影響 KERAS????!?!?!??!?! # NEW
     with tf.Session() as sess:
-        sess.run(init_op) #execute init_op
-        #print the random values that we sample
         for _l_i in range(AMOUNT_OUT):
+#            sess.run(init_op)
             out_psnr[_l_i] = sess.run(ten_psnr[_l_i])
             out_ssim[_l_i] = sess.run(ten_ssim[_l_i])
     ## 計算最大與決定是否存權重

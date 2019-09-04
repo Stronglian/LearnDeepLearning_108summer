@@ -16,12 +16,12 @@ sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 # 設定 Keras 使用的 Session
 tf.keras.backend.set_session(sess)
 
-#%%
+#%% keras import
 #from keras import backend as K
 from keras.models import Model#, Sequential
 from keras.layers import Input, Conv2D, Add, Lambda #, Dense,  Flatten, Activation, MaxPooling2D
 from model_collect import res_block, normalize, denormalize, upsample
-from model_collect import psnr, ssim
+#from model_collect import psnr, ssim
 ##%%
 #from keras.applications.vgg16 import VGG16
 
@@ -41,8 +41,9 @@ batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_folder = "./load_weight_0904/"
 #model_weight_path = None # list
 model_weight_path = ["e40_x32-x64_model_b16_lo365.12378_w.h5", None] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
+model_discription = "2Model_continue"
 #%% logger 
-saveFolder = "./result/_e{1:0>2d}_b{2}_{0}/".format("2Model_continue", epochs, batch_size)
+saveFolder = "./result/_e{1:0>2d}_b{2}_{0}/".format(model_discription, epochs, batch_size)
 try:
     os.makedirs(saveFolder)
 except:
@@ -77,7 +78,7 @@ def Model_TEST(scale = 2, num_filters = 64, num_res_blocks = 8, res_block_scalin
     x = Lambda(denormalize)(x)
     return b2, Model(x_in, x, name=model_name)
 
-#%%
+#%% MODEL compile
 m_branch, model1 = Model_TEST(model_name="x32-x64_model")
 model1.summary()
 model1.compile('adam',loss='mse')
@@ -122,7 +123,11 @@ _DO_arr = {1:[0, 0], 3:[0, 0]}
 # LOG
 log.ShowLocalTime()
 log.SetLogTime("train")
-log.UpdateProgSetting(itrMax = itr_max, batch_size = batch_size, epochs = epochs, model_weight_path = model_weight_path)
+log.UpdateProgSetting(itrMax = itr_max, 
+                      batch_size = batch_size, 
+                      epochs = epochs, 
+                      model_weight_path = model_weight_path,
+                      model_discription = model_discription)
 # SET
 strShowLoss = "e%02d it%03d %s: 'min' %.3f <- %.3f"
 strModelName_Loss = 'e%d_%s_b%d_lo%.5f_w.h5'
@@ -173,7 +178,8 @@ for epoch in range(epochs):
     tmp_psnr1, tmp_ssim1 = Cal_PSNR_SSIM(predit1, batch_mid)
     tmp_psnr3, tmp_ssim3 = Cal_PSNR_SSIM(predit2, batch_out)
     ## (最可能出問題)計算
-    init_op = tf.initialize_all_variables() # 不知道會不會影響 KERAS????!?!?!??!?!
+#    init_op = tf.initialize_all_variables() # 不知道會不會影響 KERAS????!?!?!??!?! # OLD
+    init_op = tf.global_variables_initializer() # 不知道會不會影響 KERAS????!?!?!??!?! # NEW
     with tf.Session() as sess:
         sess.run(init_op) #execute init_op
         #print the random values that we sample
@@ -193,7 +199,7 @@ for epoch in range(epochs):
     elif all(_DO_arr[1]):
         model1.save_weights(saveFolder + strModelName_P_S%(epoch, model1.name, batch_size, maxPSNR1, maxSSIM1))
     
-    log.SetLogTime("e%2d_Valid"%(epoch), mode = "end")
+    log.SetLogTime("e%02d_Valid"%(epoch), mode = "end")
     # LOSS 紀錄
     if epoch % 1 == 0:
         # save loss
