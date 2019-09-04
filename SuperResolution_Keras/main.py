@@ -203,7 +203,7 @@ if 3 in INT_FLOW_CONTROL:
                 print("e%2d, output%d, \"MAX\" PSNR:%2.5f, SSIM:%1.5f"%(epoch, _l_i, maxPSNR[_l_i], maxSSIM[_l_i]))
                 model_all.save_weights(saveFolder + strModelName_P_S%(epoch, model_all.name, batch_size, _l_i, maxPSNR[_l_i], maxSSIM[_l_i]))
         
-        log.SetLogTime("e%2d_Valid"%(epoch), mode = "end")
+        log.SetLogTime("e%02d_Valid"%(epoch), mode = "end")
         # LOSS 紀錄
         if epoch % 1 == 0:
             # save loss # 數量是最後 batch_size

@@ -166,7 +166,7 @@ for epoch in range(epochs):
                 model2.save_weights(saveFolder + strModelName_Loss%(epoch, model2.name, batch_size, loss3))
             minLoss3 = loss3
     # 可能要用 PSENR SSIM 來評估 除存與否
-    log.SetLogTime("e%2d_Valid"%(epoch), boolPrint=True)
+    log.SetLogTime("e%02d_Valid"%(epoch), boolPrint=True)
     remainingIndex = step*batch_size
     batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, ctype = "remaining")
     batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, ctype = "remaining")
