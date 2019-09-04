@@ -123,7 +123,7 @@ log.ShowLocalTime()
 log.SetLogTime("train")
 log.UpdateProgSetting(itrMax = itr_max, batch_size = batch_size, epochs = epochs, model_weight_path = model_weight_path)
 # SET
-strShowLoss = "e%02d it%03d %s: 'min' %.3f <- %.3f =="
+strShowLoss = "e%02d it%03d %s: 'min' %.3f <- %.3f"
 strModelName_Loss = 'e%d_%s_b%d_lo%.5f_w.h5'
 strModelName_P_S  = 'e%d_%s_b%d_P%.2f_S%.5f_w.h5'
 boolFirst = [True, True, True]
