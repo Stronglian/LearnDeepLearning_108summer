@@ -166,12 +166,16 @@ for epoch in range(epochs):
                     boolFirst[_l_i] = False
                     print("save model")
                     model_all.save_weights(saveFolder + strModelName_Loss%(epoch, model_all.name, batch_size, _l_i, loss_out[_l_i]))
+        break # for TEST
     # 可能要用 PSENR SSIM 來評估 除存與否
     log.SetLogTime("e%02d_Valid"%(epoch), boolPrint=True)
     remainingIndex = (step+1)*batch_size
-    batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, ctype = "remaining")
-    batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, ctype = "remaining")
-    batch_out  = dataloader.GetData("dataset128_x", remainingIndex, ctype = "remaining")
+    batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, batch_size = 5, ctype = "remaining")
+    batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, batch_size = 5, ctype = "remaining")
+    batch_out  = dataloader.GetData("dataset128_x", remainingIndex, batch_size = 5, ctype = "remaining")
+#    batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, ctype = "remaining")
+#    batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, ctype = "remaining")
+#    batch_out  = dataloader.GetData("dataset128_x", remainingIndex, ctype = "remaining")
     ## 預測
     predit_eval = model_all.predict(batch_in)
     ## 包成 tensor
