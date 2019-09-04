@@ -108,7 +108,10 @@ def Cal_PSNR_SSIM(in1, in2, max_val=255):
     return out_psnr, out_ssim
 def CalMax(inVal_list, maxVal):
     inValAvg = np.average(inVal_list)
-    if inValAvg > maxVal or not maxVal:
+    if not maxVal: # is None:
+        maxVal = inValAvg
+        boolDO = True
+    if inValAvg > maxVal:
         maxVal = inValAvg
         boolDO = True
     else:
@@ -120,7 +123,7 @@ log.ShowLocalTime()
 log.SetLogTime("train")
 log.UpdateProgSetting(itrMax = itr_max, batch_size = batch_size, epochs = epochs, model_weight_path = model_weight_path)
 # SET
-strShowLoss = "\re%02d it%03d %s: 'min' %.3f <- %.3f =="
+strShowLoss = "e%02d it%03d %s: 'min' %.3f <- %.3f =="
 strModelName_Loss = 'e%d_%s_b%d_lo%.5f_w.h5'
 strModelName_P_S  = 'e%d_%s_b%d_P%.2f_S%.5f_w.h5'
 boolFirst = [True, True, True]
@@ -139,7 +142,7 @@ for epoch in range(epochs):
         loss1 = model1.train_on_batch(batch_in, batch_mid)
         loss3 = model2.train_on_batch(model1.predict(batch_in), batch_out)
         
-        if step%100 == 0 :
+        if step%50 == 0 :
             print("itr: %d loss1: %d, loss3: %d"%(step, loss1, loss3))
         if loss1 < minLoss1:
             print(strShowLoss%(epoch, step, "loss1", minLoss1, loss1))
