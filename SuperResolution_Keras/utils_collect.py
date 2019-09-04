@@ -146,9 +146,9 @@ class DataLoader:
         if self.batch_index > self.iter_max: # 結束
             raise StopIteration
         else:
-            batch_in   = self.GetData("dataset32_x",  self.batch_index, self.batch_size)
-            batch_mid  = self.GetData("dataset64_x",  self.batch_index, self.batch_size)
-            batch_out  = self.GetData("dataset128_x", self.batch_index, self.batch_size)
+            batch_in  = self.GetData("dataset32_x",  self.batch_index, self.batch_size)
+            batch_mid = self.GetData("dataset64_x",  self.batch_index, self.batch_size)
+            batch_out = self.GetData("dataset128_x", self.batch_index, self.batch_size)
             self.batch_index += self.batch_size
             return batch_in, batch_mid, batch_out
 #%% Time

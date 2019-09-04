@@ -48,15 +48,6 @@ except:
 
 log = OWNLogger(logNPY = saveFolder, lossName=["loss_32-64", "loss_32-128", "PSNR", "SSIM"])
 #%% LOAD DATASET
-#dataFolder = "./datasetNPY/"
-#subfolderList = os.listdir(dataFolder)
-#dataSet = dict()
-#for _n in subfolderList:
-#    tmpDict = LoadNPY(dataFolder+_n)
-#    dataSet.update(tmpDict)
-##shuffle
-#index_shuffle = np.array([i for i in range(len(dataSet["dataset32_x"]))], dtype=np.int)
-#np.random.shuffle(index_shuffle)
 dataloader = DataLoader(dataFolder = "./datasetNPY/", batch_size = batch_size)
 #%% MODEL
 # mainModel
@@ -106,50 +97,41 @@ minLoss1 = minLoss2 = minLoss3 = 100000000000
 log.ShowLocalTime()
 log.SetLogTime("train")
 log.UpdateProgSetting(itrMax = itr_max, batch_size = batch_size, epochs = epochs)
+# SET
 strShowLoss = "e%d it%d min %s: %.3f <- %.3f"
+strModelName = 'e%d_%s_b%d_lo%.5f_w.h5'
+boolFirst = [True, True, True]
 #%% TRAIN #要照它的嗎? https://github.com/krasserm/super-resolution/blob/master/train.py
 for epoch in range(epochs):
     print("epoch", epoch)
     log.SetLogTime("e%2d"%(epoch))
     batch_index = 0
-#    for step, (batch_in, batch_mid, batch_out) in enumerate(dataloader):
-    for step in range(itr_max): # 壓制這個，把剩下的當 valid 也是方案
-        batch_in  = dataloader.GetData("dataset32_x",  batch_index, batch_size)
-        batch_mid = dataloader.GetData("dataset64_x",  batch_index, batch_size)
-        batch_out = dataloader.GetData("dataset128_x",  batch_index, batch_size)
-#        batch_in  = GetData(dataSet, "dataset32_x",  batch_index, batch_size, index_shuffle) 
-#        batch_mid = GetData(dataSet, "dataset64_x",  batch_index, batch_size, index_shuffle)
-#        batch_out = GetData(dataSet, "dataset128_x", batch_index, batch_size, index_shuffle)
-        batch_index += batch_size
+    for step, (batch_in, batch_mid, batch_out) in enumerate(dataloader):
+#    for step in range(itr_max): # 壓制這個，把剩下的當 valid 也是方案
+#        batch_in  = dataloader.GetData("dataset32_x",  batch_index, batch_size)
+#        batch_mid = dataloader.GetData("dataset64_x",  batch_index, batch_size)
+#        batch_out = dataloader.GetData("dataset128_x",  batch_index, batch_size)
+#        batch_index += batch_size
         
         loss1 = model1.train_on_batch(batch_in, batch_mid)
-#        loss2 = model2.train_on_batch(batch_mid, batch_out)
         loss3 = model2.train_on_batch(model1.predict(batch_in), batch_out)
         
         if step%100 == 0 :
             print("itr: %d loss1: %d, loss3: %d"%(step, loss1, loss3))
-#            print("itr: %d loss1: %d, loss2: %d, loss3: %d"%(step, loss1, loss2, loss3))
         if loss1 < minLoss1:
             print(strShowLoss%(epoch, step, "loss1", minLoss1, loss1))
-            if epoch > 0 or epoch == 1:
+            if epoch > 0 or (epoch == 1 and boolFirst[0]):
+                boolFirst[0] = False
                 print("save model1")
-                model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epoch, model1.name, batch_size, loss1))
+                model1.save_weights(saveFolder + strModelName%(epoch, model1.name, batch_size, loss1))
             minLoss1 = loss1
-#        if loss2 < minLoss2 and epoch > 0:
-#            print(strLossShow%(epoch, "loss2", minLoss2, loss2))
-#            if epoch > 0:
-#                print("save model1, model2")
-#                model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epoch, model1.name, batch_size, loss1))
-#                model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epoch, model2.name, batch_size, loss2))
-#            minLoss2 = loss2
         if loss3 < minLoss3:
             print(strShowLoss%(epoch, step, "loss3", minLoss3, loss3))
-            if epoch > 0 or epoch == 1:
+            if epoch > 0 or (epoch == 1 and boolFirst[2]):
+                boolFirst[2] = False
                 print("save model1, model2")
-#                model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo3-%.5f_w.h5'%(epoch, model1.name, batch_size, loss1, loss3))
-#                model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo3-%.5f_w.h5'%(epoch, model2.name, batch_size, loss2, loss3))
-                model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo_w.h5'%(epoch, model1.name, batch_size, loss1))
-                model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo_w.h5'%(epoch, model2.name, batch_size, loss3))
+                model1.save_weights(saveFolder + strModelName%(epoch, model1.name, batch_size, loss1))
+                model2.save_weights(saveFolder + strModelName%(epoch, model2.name, batch_size, loss3))
             minLoss3 = loss3
     # 可能要用 PSENR SSIM 來評估 除存與否
     remainingIndex = step*batch_size
@@ -160,7 +142,6 @@ for epoch in range(epochs):
     if epoch % 1 == 0:
         # save loss
         log.AppendLossIn("loss_32-64", loss1)
-#        log.AppendLossIn("loss_64-128", loss2)
         log.AppendLossIn("loss_32-128", loss3)
 #        log.AppendLossIn("PSNR", psnr_epoch)
 #        log.AppendLossIn("SSIM", ssim_epoch)
@@ -169,12 +150,10 @@ for epoch in range(epochs):
     model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_END_w.h5'%(epoch, model2.name, batch_size, loss3))
         
     log.SetLogTime("e%2d"%(epoch), mode = "end")
-#    print('==========epcohs: %d, loss1: %.5f, loss2:, %.5f, loss3:, %.5f ======='%(epoch, loss1, loss2, loss3))
     print('==========epcohs: %d, loss1: %.5f, loss3:, %.5f ======='%(epoch, loss1, loss3))
     # epoch 結束後，shuffle
     if epoch % 1 == 0:
         dataloader.ShuffleIndex()
-#        np.random.shuffle(index_shuffle)
     break
 #%% SAVE MODEL 上面存過了
 #model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
