@@ -5,7 +5,7 @@ import numpy as np
 import json
 import os
 #from PIL im
-#%%
+#%% show
 #def show_photo(img):
 #    plt.figure(figsize=(15, 15))
 #    for i in range(1,8):
@@ -38,8 +38,9 @@ def show_result_row(img_list):
     plt.show()
     return
 
-#%%
-    
+def show_val_info(strOut, listValue):
+    print(strOut, "avg:", np.average(listValue), "max:", np.max(listValue), "min:", np.min(listValue))
+#%%    
 def LoadJSON(nameJSON):#, nameDict):
     #讀取
     try:
@@ -48,7 +49,7 @@ def LoadJSON(nameJSON):#, nameDict):
     except FileNotFoundError:
         nameDict = dict() #{name:{filename:{"id":,"date":},},}
     return nameDict
-#%%
+#%% data - basic
 def DumpJSON(nameJSON, nameDict):
     with open(nameJSON, 'w') as outfile:
         json.dump(nameDict, outfile)
@@ -75,7 +76,7 @@ def GetData(dict_input, dict_key,  batch_index, batch_size, index_shuffle, dtype
     return dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size], :, :].astype(dtype)
 
 class DataLoader:
-    def __init__(self, dataFolder):
+    def __init__(self, dataFolder, batch_size):
         """
         當作資料夾裡面是乾淨(只有需要)的東西的來做
         """
@@ -85,6 +86,8 @@ class DataLoader:
         # shuffle
         self.ShuffleIndex(index_shuffle = None, boolReset = True);
 #        self.ShuffleIndex();
+        # 
+        self.batch_size = batch_size
         # 分配 valid，看是要指定，還是直接取隨機
         return
     def UpdateDataset(self, dataFolder, boolNew = True):
@@ -111,8 +114,19 @@ class DataLoader:
 #            self.index_shuffle = np.array([i for i in range(len(self.dataSet[list(self.dataSet.keys())[0]]))], dtype=np.int)
 #        np.random.shuffle(self.index_shuffle);
 #        return
-    def GetData(self, dict_key,  batch_index, batch_size, dtype = np.float):
-        return self.dataSet[dict_key][self.index_shuffle[batch_index : batch_index+batch_size], :, :].astype(dtype)
+    def GetData(self, dict_key,  batch_index, batch_size = None, dtype = np.float, ctype = None):
+        """
+        要回傳特定的量與類型
+        """
+        batch_size = batch_size if batch_size else self.batch_size
+        if ctype == "remaining": # 資料分類
+            class_split = self.index_shuffle[batch_index : ]
+        else:
+            """
+            都沒給的話
+            """
+            class_split = self.index_shuffle[batch_index : batch_index + batch_size]
+        return self.dataSet[dict_key][class_split, :, :].astype(dtype)
     def GetLen(self, d_type = "train"):
         """
         獲取指定資料數量
@@ -130,11 +144,11 @@ class OWNLogger:
     def __init__(self, logNPY = None, lossName = list(), dictSetting = dict()):
         # Dict
         self.dictLog = dict()
-        self.dictLog["time"] = dict()
-        self.dictLog["loss"] = dict()
+        self.dictLog["TIME"] = dict()
+        self.dictLog["LOSS"] = dict()
         self.dictLog["SET"] = dictSetting
         for _l in lossName:
-            self.dictLog["loss"][_l] = list()
+            self.dictLog["LOSS"][_l] = list()
         # SAVE
         if logNPY is None:
             self.logNPY = "./log_from%s.npy"%(self.ShowLocalTime())
@@ -145,6 +159,9 @@ class OWNLogger:
 #    def __del__(self):
 #        self.SaveLog2NPY()
 #        return
+    def UpdateProgSetting(self, **dictSetting):
+        self.dictLog["SET"].update(dictSetting)
+        return
     # SAVE
     def SaveLog2NPY(self, boolPrint = False):
         if boolPrint:
@@ -171,11 +188,11 @@ class OWNLogger:
             "end"
         tag
         """
-        self.dictLog["time"][tag+"_"+mode] = time.time()
+        self.dictLog["TIME"][tag+"_"+mode] = time.time()
         if mode == "end":
-            if tag+"_start" not in list(self.dictLog["time"].keys()):
+            if tag+"_start" not in list(self.dictLog["TIME"].keys()):
                 raise ValueError("%s_start not in LOG"%(tag))
-            print("%s, It cost %.5f sec."%(tag, self.dictLog["time"][tag+"_end"] - self.dictLog["time"][tag+"_start"]))
+            print("%s, It cost %.5f sec."%(tag, self.dictLog["TIME"][tag+"_end"] - self.dictLog["TIME"][tag+"_start"]))
         return
     def ShowDateTime(self, intput_time_struct, boolPrint = True):
         if boolPrint:
@@ -183,11 +200,11 @@ class OWNLogger:
         return time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct)
     def ShowLocalTime(self):
         return self.ShowDateTime(time.localtime())
-    # LoSS
+    # LOSS
     def AppendLossIn(self, lossName, lossValue):
-        if lossName not in list(self.dictLog["loss"].keys()):
+        if lossName not in list(self.dictLog["LOSS"].keys()):
             raise ValueError("%s not in loss list"%(lossName))
-        self.dictLog["loss"][lossName].append(lossValue)
+        self.dictLog["LOSS"][lossName].append(lossValue)
         return
     def ShowLineChart(self, lossName):
         """折線圖顯示
@@ -218,12 +235,12 @@ if __name__ == "__main__" and False :
         if max(in_list) > MAX_SHOW:
             in_list = np.clip(in_list, 0, MAX_SHOW)
         return in_list
-    for _i, _n_loss in enumerate(tmp_dictLog["loss"].keys()):
+    for _i, _n_loss in enumerate(tmp_dictLog["LOSS"].keys()):
         if _i != 2:
             continue
-        loss_amount = len(tmp_dictLog["loss"][_n_loss])
+        loss_amount = len(tmp_dictLog["LOSS"][_n_loss])
         e_list = [_i for _i in range(loss_amount)]
-        loss_list = tmp_dictLog["loss"][_n_loss].copy()
+        loss_list = tmp_dictLog["LOSS"][_n_loss].copy()
         # show value
         max_loss = np.max(loss_list)
         min_loss = np.min(loss_list)
