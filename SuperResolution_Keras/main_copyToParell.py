@@ -40,7 +40,7 @@ epochs = 40
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_path = None # list
 #%% logger 
-saveFolder = "./result/_e{1}_b{2}_{0}".format("TEST", epochs, batch_size)
+saveFolder = "./result/_e{1}_b{2}_{0}/".format("TEST", epochs, batch_size)
 try:
     os.makedirs(saveFolder)
 except:
@@ -106,6 +106,7 @@ minLoss1 = minLoss2 = minLoss3 = 100000000000
 log.ShowLocalTime()
 log.SetLogTime("train")
 log.UpdateProgSetting(itrMax = itr_max, batch_size = batch_size, epochs = epochs)
+strShowLoss = "e%d it%d min %s: %.3f <- %.3f"
 #%% TRAIN #要照它的嗎? https://github.com/krasserm/super-resolution/blob/master/train.py
 for epoch in range(epochs):
     print("epoch", epoch)
@@ -129,21 +130,21 @@ for epoch in range(epochs):
             print("itr: %d loss1: %d, loss3: %d"%(step, loss1, loss3))
 #            print("itr: %d loss1: %d, loss2: %d, loss3: %d"%(step, loss1, loss2, loss3))
         if loss1 < minLoss1:
-            print("e%d min %s: %.3f -> %.3f"%(epoch, "loss1", minLoss1, loss1))
-            if epoch > 0:
+            print(strShowLoss%(epoch, step, "loss1", minLoss1, loss1))
+            if epoch > 0 or epoch == 1:
                 print("save model1")
                 model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epoch, model1.name, batch_size, loss1))
             minLoss1 = loss1
 #        if loss2 < minLoss2 and epoch > 0:
-#            print("e%d min %s: %.3f -> %.3f"%(epoch, "loss2", minLoss2, loss2))
+#            print(strLossShow%(epoch, "loss2", minLoss2, loss2))
 #            if epoch > 0:
 #                print("save model1, model2")
 #                model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epoch, model1.name, batch_size, loss1))
 #                model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epoch, model2.name, batch_size, loss2))
 #            minLoss2 = loss2
-        if loss3 < minLoss3 and epoch > 0:
-            print("e%d min %s: %.3f -> %.3f"%(epoch, "loss3", minLoss3, loss3))
-            if epoch > 0:
+        if loss3 < minLoss3:
+            print(strShowLoss%(epoch, step, "loss3", minLoss3, loss3))
+            if epoch > 0 or epoch == 1:
                 print("save model1, model2")
 #                model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo3-%.5f_w.h5'%(epoch, model1.name, batch_size, loss1, loss3))
 #                model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo3-%.5f_w.h5'%(epoch, model2.name, batch_size, loss2, loss3))

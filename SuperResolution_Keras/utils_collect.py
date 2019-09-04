@@ -115,9 +115,17 @@ class DataLoader:
 #            self.index_shuffle = np.array([i for i in range(len(self.dataSet[list(self.dataSet.keys())[0]]))], dtype=np.int)
 #        np.random.shuffle(self.index_shuffle);
 #        return
+    def GetLen(self, d_key = "dataset32_y"):
+        """
+        獲取指定資料數量
+        """
+        return len(self.dataSet[d_key])
     def CalMaxIter(self):
-        self.iter_max = int(len(self.dataSet["dataset32_y"])//self.batch_size * self.train_ratio)
-        return self.iter_max
+        """
+        直接算最大 ITER
+        """
+        self.iter_max = int( (self.GetLen()//self.batch_size) * self.train_ratio);
+        return self.iter_max;
     def GetData(self, dict_key,  batch_index, batch_size = None, dtype = np.float, ctype = None):
         """
         要回傳特定的量與類型
@@ -131,22 +139,17 @@ class DataLoader:
             """
             class_split = self.index_shuffle[batch_index : batch_index + batch_size]
         return self.dataSet[dict_key][class_split, :, :].astype(dtype)
-    def GetLen(self, d_type = "train"):
-        """
-        獲取指定資料數量
-        """
-        pass
     # 用 ITER 跑?
     def __iter__(self): # ??
         return self
     def __next__(self):
-        if None: # 結束
+        if self.batch_index > self.iter_max: # 結束
             raise StopIteration
         else:
-            self.batch_index += self.batch_size
             batch_in   = self.GetData("dataset32_x",  self.batch_index, self.batch_size)
             batch_mid  = self.GetData("dataset64_x",  self.batch_index, self.batch_size)
             batch_out  = self.GetData("dataset128_x", self.batch_index, self.batch_size)
+            self.batch_index += self.batch_size
             return batch_in, batch_mid, batch_out
 #%% Time
 """
@@ -202,7 +205,9 @@ class OWNLogger:
         mode:
             "start"
             "end"
-        tag
+        tag:
+            epoch%d
+            train
         """
         self.dictLog["TIME"][tag+"_"+mode] = time.time()
         if mode == "end":
