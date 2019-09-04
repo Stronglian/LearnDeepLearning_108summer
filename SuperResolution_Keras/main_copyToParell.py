@@ -36,12 +36,13 @@ DICT_FLOW_NAME = {1:"載入資料庫",
                   6:"評估"}
 #%% 參數設定 - 
 # train
-epochs = 3
+epochs = 10
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
-model_weight_path = None # list
-#model_weight_path = ["load_weight_0904/", None] # list
+model_weight_folder = "./load_weight_0904/"
+#model_weight_path = None # list
+model_weight_path = ["e40_x32-x64_model_b16_lo365.12378_w.h5", None] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
 #%% logger 
-saveFolder = "./result/_e{1}_b{2}_{0}/".format("TEST", epochs, batch_size)
+saveFolder = "./result/_e{1:0>2d}_b{2}_{0}/".format("2Model_continue", epochs, batch_size)
 try:
     os.makedirs(saveFolder)
 except:
@@ -90,9 +91,9 @@ model2.compile('adam',loss='mse')
 #model3.compile('adam',loss='mse')
 #%% LOAD MODEL
 if model_weight_path:
-    model1.load_weights(model_weight_path[0], by_name=True)
+    model1.load_weights(model_weight_folder + model_weight_path[0], by_name=True)
     if model_weight_path[1]:
-        model2.load_weights(model_weight_path[1], by_name=True)
+        model2.load_weights(model_weight_folder + model_weight_path[1], by_name=True)
 #%% train parm set
 itr_max = dataloader.CalMaxIter() # int(len(dataSet["dataset32_x"])//batch_size) #207.75
 print("epoch: %d, batch_szie: %d, itr max: %d"%(epochs, batch_size, itr_max))
