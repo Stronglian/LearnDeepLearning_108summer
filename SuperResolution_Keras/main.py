@@ -85,7 +85,7 @@ if 2 in INT_FLOW_CONTROL:
     x_in, x_64,  m_branch = Model_Block(name_id="_32-64", name_output = "to64") # 32-64
     _,    x_128, _        = Model_Block(x_in = m_branch, name_id = "_64-128", name_output = "to128") # 64-128
     
-    model_all = Model(input = x_in, output = [x_64, x_128], name = "x32to64to128_model")
+    model_all = Model(input = x_in, output = [x_64, x_128], name = "x32to64to128_model") # warning, 似乎要轉成 tensor 再送給 model
     model_all.compile(optimizer='adam', loss = ['mse', 'mse'])
     #model_all = Model(input = x_in, output = {"to64":x_64, "to128":x_128}, name = "x32to64to128")
     #model_all.compile(optimizer='adam', loss = {"to64":'mse', "to128":'mse'})
