@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Aug 29 13:41:04 2019
-
-@author: Strong
-
 import zipfile
 https://stackoverflow.com/questions/3451111/unzipping-files-in-python
 """

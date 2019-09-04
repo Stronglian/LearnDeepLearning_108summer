@@ -4,7 +4,7 @@ Sor, just a homework of class.
 """
 import numpy as np
 import tensorflow as tf
-from keras.layers import Add, Conv2D, Input, Lambda
+from keras.layers import Add, Conv2D, Lambda
 
 """
 https://github.com/krasserm/super-resolution/blob/master/model/edsr.py
@@ -26,7 +26,7 @@ https://github.com/krasserm/super-resolution/blob/master/model/edsr.py
 #    x = Lambda(denormalize)(x)
 #    return Model(x_in, x, name="edsr")
 
-def res_block(x_in, filters, scaling):
+def res_block(x_in, filters, scaling=None):
     x = Conv2D(filters, 3, padding='same', activation='relu')(x_in)
     x = Conv2D(filters, 3, padding='same')(x)
     if scaling:
@@ -35,18 +35,18 @@ def res_block(x_in, filters, scaling):
     return x
 
 
-def upsample(x, scale, num_filters):
+def upsample(x, scale, num_filters, name_id = ""):
     def upsample_1(x, factor, **kwargs):
         x = Conv2D(num_filters * (factor ** 2), 3, padding='same', **kwargs)(x)
         return Lambda(subpixel_conv2d(scale=factor))(x)
 
     if scale == 2:
-        x = upsample_1(x, 2, name='conv2d_1_scale_2')
+        x = upsample_1(x, 2, name='conv2d_1_scale_2%s'%(name_id))
     elif scale == 3:
-        x = upsample_1(x, 3, name='conv2d_1_scale_3')
+        x = upsample_1(x, 3, name='conv2d_1_scale_3%s'%(name_id))
     elif scale == 4:
-        x = upsample_1(x, 2, name='conv2d_1_scale_2')
-        x = upsample_1(x, 2, name='conv2d_2_scale_2')
+        x = upsample_1(x, 2, name='conv2d_1_scale_2%s'%(name_id))
+        x = upsample_1(x, 2, name='conv2d_2_scale_2%s'%(name_id))
 
     return x
 """
@@ -57,13 +57,14 @@ https://github.com/krasserm/super-resolution/blob/master/model/common.py
 #  Normalization
 # ---------------------------------------
 
-DIV2K_RGB_MEAN = np.array([0.4488, 0.4371, 0.4040]) * 255
+DIV2K_RGB_MEAN = np.array([0.4488, 0.4371, 0.4040]) * 255 #自己來算一個
+OWN_BGR_MEAN = np.array([35.111, 46.9314, 54.7419])
 
-def normalize(x, rgb_mean=DIV2K_RGB_MEAN):
+def normalize(x, rgb_mean=OWN_BGR_MEAN):
     return (x - rgb_mean) / 127.5
 
 
-def denormalize(x, rgb_mean=DIV2K_RGB_MEAN):
+def denormalize(x, rgb_mean=OWN_BGR_MEAN):
     return x * 127.5 + rgb_mean
 
 # ---------------------------------------
@@ -73,6 +74,9 @@ def denormalize(x, rgb_mean=DIV2K_RGB_MEAN):
 
 def psnr(x1, x2):
     return tf.image.psnr(x1, x2, max_val=255)
+
+def ssim(x1, x2):
+    return tf.image.ssim(x1, x2, max_val=255)
 
 
 # ---------------------------------------
