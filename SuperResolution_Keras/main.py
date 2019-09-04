@@ -33,7 +33,7 @@ DICT_FLOW_NAME = {1:"載入資料庫",
                   6:"評估"}
 #%% 參數設定 - 
 # train
-epochs = 10
+epochs = 3
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_folder = "./"
 model_weight_path = None # list
