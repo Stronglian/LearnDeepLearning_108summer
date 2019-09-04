@@ -58,7 +58,7 @@ def LoadNPY(nameNPY, shape = None):
     try:
 #        with np.load(nameNPY) as inputfile:
 #            nameArr = inputfile.copy()
-        nameArr = np.load(nameNPY, allow_pickle=True).item()
+        nameArr = np.load(nameNPY, allow_pickle = True).item()
     except FileNotFoundError:
         nameArr = np.zeros(shape)
     return nameArr
@@ -77,13 +77,13 @@ def GetData(dict_input, dict_key,  batch_index, batch_size, index_shuffle, dtype
 class DataLoader:
     def __init__(self, dataFolder):
         """
-        當作資料夾裡面是乾淨的來做
+        當作資料夾裡面是乾淨(只有需要)的東西的來做
         """
 #        dataFolder = "./datasetNPY/"
         self.dataFolder = dataFolder
         self.UpdateDataset(dataFolder);
         # shuffle
-        self.ShuffleIndex(index_shuffle = None, boolReset=True);
+        self.ShuffleIndex(index_shuffle = None, boolReset = True);
 #        self.ShuffleIndex();
         # 分配 valid，看是要指定，還是直接取隨機
         return
@@ -96,7 +96,7 @@ class DataLoader:
             self.dataSet.update(tmpDict)
         del tmpDict
         return
-    def ShuffleIndex(self, index_shuffle = None, boolReset=False):
+    def ShuffleIndex(self, index_shuffle = None, boolReset = False):
         """
         沒參數直接 call 就是 重新 shuffle 要數列而已。
         """
@@ -195,7 +195,7 @@ class OWNLogger:
         pass
 #%%
     
-if __name__ == "__main__":
+if __name__ == "__main__" and False :
 #    t = OWNLogger()
 #    t.ShowLocalTime()
 #    plt.axis('off')
