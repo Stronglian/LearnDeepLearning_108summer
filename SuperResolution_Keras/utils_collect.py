@@ -130,12 +130,9 @@ class DataLoader:
         要回傳特定的量與類型
         """
         batch_size = batch_size if batch_size else self.batch_size
-        if ctype == "remaining": # 資料分類
-            class_split = self.index_shuffle[batch_index : ]
-        else:
-            """
-            都沒給的話
-            """
+        if ctype == "remaining": # 資料分類 # 取剩下的，主要用於 valid
+            class_split = self.index_shuffle[batch_index : batch_size]
+        else: # None and other
             class_split = self.index_shuffle[batch_index : batch_index + batch_size]
         return self.dataSet[dict_key][class_split, :, :].astype(dtype)
     # 用 ITER 跑?
@@ -229,28 +226,32 @@ class OWNLogger:
             raise ValueError("%s not in loss list"%(lossName))
         self.dictLog["LOSS"][lossName].append(lossValue)
         return
-    def ShowLineChart(self, lossName):
-        """折線圖顯示
-        """
-        pass
-#%%
+#    def ShowLineChart(self, lossName):
+#        """折線圖顯示
+#        """
+#        pass
+#%% show fig
+#def ShowFig()
     
-if __name__ == "__main__" and False :
+#%%
+if __name__ == "__main__" and True :
 #    t = OWNLogger()
 #    t.ShowLocalTime()
 #    plt.axis('off')
 #    plt.show()
+    LOSS = "loss"
     strNPYname = "./w3_NPY/log_from2019-08-31 16_10_45.npy"
-    
-    def plotData(plt, data):
-      x = [p[0] for p in data]
-      y = [p[1] for p in data]
-      plt.plot(x, y, '-o')
+    if not os.path.exists(strNPYname):
+        raise IOError(strNPYname, "not exists")
+#    def plotData(plt, data):
+#      x = [p[0] for p in data]
+#      y = [p[1] for p in data]
+#      plt.plot(x, y, '-o')
   
-    tmpLogger = OWNLogger() #LOAD 不進來!???
-    tmpLogger.LoadLog(strNPYname, boolForce=True)
-    tmp_dictLog = tmpLogger.dictLog
-#    tmp_dictLog = np.load(strNPYname, allow_pickle=True).item()
+#    tmpLogger = OWNLogger() #LOAD 不進來!???
+#    tmpLogger.LoadLog(strNPYname, boolForce=True)
+#    tmp_dictLog = tmpLogger.dictLog
+    tmp_dictLog = np.load(strNPYname, allow_pickle=True).item()
     
     MAX_SHOW_ALL = 2000
     MAX_SHOW_MIN = 200
@@ -258,12 +259,12 @@ if __name__ == "__main__" and False :
         if max(in_list) > MAX_SHOW:
             in_list = np.clip(in_list, 0, MAX_SHOW)
         return in_list
-    for _i, _n_loss in enumerate(tmp_dictLog["LOSS"].keys()):
-        if _i != 2:
-            continue
-        loss_amount = len(tmp_dictLog["LOSS"][_n_loss])
-        e_list = [_i for _i in range(loss_amount)]
-        loss_list = tmp_dictLog["LOSS"][_n_loss].copy()
+    for _i, _n_loss in enumerate(tmp_dictLog[LOSS].keys()):
+#        if _i != 2:
+#            continue
+        loss_amount = len(tmp_dictLog[LOSS][_n_loss])
+        e_list = [_j for _j in range(loss_amount)]
+        loss_list = tmp_dictLog[LOSS][_n_loss].copy()
         # show value
         max_loss = np.max(loss_list)
         min_loss = np.min(loss_list)
@@ -287,9 +288,8 @@ if __name__ == "__main__" and False :
         max_list = S_Clip(max_list, 1000000)
         min_list = S_Clip(min_list, MAX_SHOW_MIN)
         # show plt
-        plt.plot(e_list, min_list)#, linewidth=2.5)#, "-o")
+        plt.plot(e_list, loss_list)#, linewidth=2.5)#, "-o")
         plt.show()
 #        break
     
     
-    pass
