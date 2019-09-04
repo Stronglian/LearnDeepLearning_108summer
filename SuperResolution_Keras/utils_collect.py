@@ -231,35 +231,87 @@ class OWNLogger:
 #        """
 #        pass
 #%% show fig
-#def ShowFig()
-    
+MAX_SHOW_ALL = 2000
+def MakeMaxMinList(loss_list):
+    max_list = []
+    min_list = []
+    max_num = loss_list[0]
+    min_num = loss_list[0]
+    for _l in loss_list:
+        if _l > max_num:
+            max_num = _l
+        if _l < min_num:
+            min_num = _l
+        max_list.append(max_num)
+        min_list.append(min_num)
+    return max_list, min_list
+
+def S_Clip(in_list, max_show = 255, min_show = 0):
+    if max(in_list) > max_show:
+        in_list = np.clip(in_list, min_show, max_show)
+    return in_list
+
+def ShowFig(x_list, input_list, max_show = None, strShowSaveTitle = "TMP", 
+            boolSave = False, strSaveFolder = "./"):
+    if max_show == None:
+        max_show = np.average(input_list)
+    input_list = S_Clip(input_list, max_show)
+    plt.title(strShowSaveTitle)
+    plt.plot(x_list, input_list)#, linewidth=2.5)#, "-o")
+    if boolSave:
+        plt.savefig("%s%s.jpg"%(strSaveFolder, strShowSaveTitle))
+    plt.show()
+    return
+
 #%%
-if __name__ == "__main__" and True :
-#    t = OWNLogger()
-#    t.ShowLocalTime()
-#    plt.axis('off')
-#    plt.show()
+if __name__ == "__main__":
+    # load log
     LOSS = "loss"
     strNPYname = "./w3_NPY/log_from2019-08-31 16_10_45.npy"
     if not os.path.exists(strNPYname):
         raise IOError(strNPYname, "not exists")
+#    tmpLogger = OWNLogger() 
+#    tmpLogger.LoadLog(strNPYname, boolForce=True)
+#    tmp_dictLog = tmpLogger.dictLog
+    tmp_dictLog = np.load(strNPYname, allow_pickle=True).item()
+    # pick data
+    for _i, _n_loss in enumerate(tmp_dictLog[LOSS].keys()):
+        print(_i, _n_loss)
+        # info 
+        loss_amount = len(tmp_dictLog[LOSS][_n_loss]) # 資料數量
+        x_list = [_j for _j in range(loss_amount)]    # 橫軸
+        loss_list = tmp_dictLog[LOSS][_n_loss].copy() # 主要資料
+        # show value
+        max_loss = np.max(loss_list)
+        min_loss = np.min(loss_list)
+        avg_loss = np.average(loss_list)
+        print("%s, len:%d, max:%.2f, min:%.5f, avg:%.5f"%(_n_loss, loss_amount, max_loss, min_loss, avg_loss))
+        # mack max/min list
+        max_list, min_list = MakeMaxMinList(loss_list)
+        # 顯示 # 需要浮動限制?
+        ShowFig(x_list, loss_list, max_show = 2000,   strShowSaveTitle = "%s_all"%(_n_loss), boolSave = True)
+#        ShowFig(x_list, max_list,  max_show = 110000, strShowSaveTitle = "%s_max"%(_n_loss), boolSave = True)
+        ShowFig(x_list, min_list,  max_show = 400,    strShowSaveTitle = "%s_min"%(_n_loss), boolSave = True)
+        break
+    # show 
+#%%
+if __name__ == "__main__" and False :
+#    t = OWNLogger()
+#    t.ShowLocalTime()
+#    plt.axis('off')
+#    plt.show()
 #    def plotData(plt, data):
 #      x = [p[0] for p in data]
 #      y = [p[1] for p in data]
 #      plt.plot(x, y, '-o')
   
-#    tmpLogger = OWNLogger() #LOAD 不進來!???
+#    tmpLogger = OWNLogger() 
 #    tmpLogger.LoadLog(strNPYname, boolForce=True)
 #    tmp_dictLog = tmpLogger.dictLog
-    tmp_dictLog = np.load(strNPYname, allow_pickle=True).item()
     
     MAX_SHOW_ALL = 2000
     MAX_SHOW_MIN = 200
-    def S_Clip(in_list, MAX_SHOW):
-        if max(in_list) > MAX_SHOW:
-            in_list = np.clip(in_list, 0, MAX_SHOW)
-        return in_list
-    for _i, _n_loss in enumerate(tmp_dictLog[LOSS].keys()):
+#    for _i, _n_loss in enumerate(tmp_dictLog[LOSS].keys()):
 #        if _i != 2:
 #            continue
         loss_amount = len(tmp_dictLog[LOSS][_n_loss])
@@ -269,18 +321,6 @@ if __name__ == "__main__" and True :
         max_loss = np.max(loss_list)
         min_loss = np.min(loss_list)
         print("%s, len:%d, max:%d, min:%d"%(_n_loss, loss_amount, max_loss, min_loss))
-        # mack max/min list
-        max_list = []
-        max_num = loss_list[0]
-        min_list = []
-        min_num = loss_list[0]
-        for _l in loss_list:
-            if _l >= max_num:
-                max_num = _l
-            if _l <= min_num:
-                min_num = _l
-            max_list.append(max_num)
-            min_list.append(min_num)
             
         # clip
         if max_loss > MAX_SHOW_ALL:
