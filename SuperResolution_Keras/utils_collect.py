@@ -210,7 +210,7 @@ class OWNLogger:
             train
         """
         if boolPrint:
-            print("=", tag, mode)
+            print("=>", tag, mode)
         self.dictLog["TIME"][tag+"_"+mode] = time.time()
         if mode == "end":
             if tag+"_start" not in list(self.dictLog["TIME"].keys()):
