@@ -39,6 +39,7 @@ DICT_FLOW_NAME = {1:"載入資料庫",
 epochs = 40
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_path = None # list
+#model_weight_path = ["load_weight_0904/", None] # list
 #%% logger 
 saveFolder = "./result/_e{1}_b{2}_{0}/".format("TEST", epochs, batch_size)
 try:
@@ -46,7 +47,10 @@ try:
 except:
     print("saveFolder", saveFolder, "is exsist.")
 
-log = OWNLogger(logNPY = saveFolder, lossName=["loss_32-64", "loss_32-128", "PSNR", "SSIM"])
+log = OWNLogger(logNPY = saveFolder, 
+                lossName=["loss_32-64", "loss_32-128", 
+                          "PSNR_32-64", "PSNR_32-128",
+                          "SSIM_32-64", "SSIM_32-128"])
 #%% LOAD DATASET
 dataloader = DataLoader(dataFolder = "./datasetNPY/", batch_size = batch_size)
 #%% MODEL
@@ -88,18 +92,34 @@ model2.compile('adam',loss='mse')
 #%% LOAD MODEL
 if model_weight_path:
     model1.load_weights(model_weight_path[0], by_name=True)
-    model2.load_weights(model_weight_path[1], by_name=True)
+    if model_weight_path[1]:
+        model2.load_weights(model_weight_path[1], by_name=True)
 #%% train parm set
 itr_max = dataloader.CalMaxIter() # int(len(dataSet["dataset32_x"])//batch_size) #207.75
 print("epoch: %d, batch_szie: %d, itr max: %d"%(epochs, batch_size, itr_max))
 minLoss1 = minLoss2 = minLoss3 = 100000000000
+maxPSNR = maxSSIM = None
+def Cal_PSNR_SSIM(in1, in2, max_val=255):
+    t1 = tf.convert_to_tensor(np.clip(in1, 0, 255))
+    t2 = tf.convert_to_tensor(in2.astype(np.float32))
+    
+    out_psnr = tf.image.psnr(t1,  t2, max_val=255)
+    out_ssim = tf.image.ssim(t1,  t2, max_val=255)
+    return out_psnr, out_ssim
+def CalMax(inVal, maxVal):
+    if inVal > maxVal:
+        maxVal = inVal
+        boolDO = True
+    else:
+        boolDO = False
+    return maxVal, boolDO
 # LOG
 log.ShowLocalTime()
 log.SetLogTime("train")
-log.UpdateProgSetting(itrMax = itr_max, batch_size = batch_size, epochs = epochs)
+log.UpdateProgSetting(itrMax = itr_max, batch_size = batch_size, epochs = epochs, model_weight_path = model_weight_path)
 # SET
 strShowLoss = "e%d it%d min %s: %.3f <- %.3f"
-strModelName = 'e%d_%s_b%d_lo%.5f_w.h5'
+strModelName_Loss = 'e%d_%s_b%d_lo%.5f_w.h5'
 boolFirst = [True, True, True]
 #%% TRAIN #要照它的嗎? https://github.com/krasserm/super-resolution/blob/master/train.py
 for epoch in range(epochs):
@@ -123,28 +143,47 @@ for epoch in range(epochs):
             if epoch > 0 or (epoch == 1 and boolFirst[0]):
                 boolFirst[0] = False
                 print("save model1")
-                model1.save_weights(saveFolder + strModelName%(epoch, model1.name, batch_size, loss1))
+                model1.save_weights(saveFolder + strModelName_Loss%(epoch, model1.name, batch_size, loss1))
             minLoss1 = loss1
         if loss3 < minLoss3:
             print(strShowLoss%(epoch, step, "loss3", minLoss3, loss3))
             if epoch > 0 or (epoch == 1 and boolFirst[2]):
                 boolFirst[2] = False
                 print("save model1, model2")
-                model1.save_weights(saveFolder + strModelName%(epoch, model1.name, batch_size, loss1))
-                model2.save_weights(saveFolder + strModelName%(epoch, model2.name, batch_size, loss3))
+                model1.save_weights(saveFolder + strModelName_Loss%(epoch, model1.name, batch_size, loss1))
+                model2.save_weights(saveFolder + strModelName_Loss%(epoch, model2.name, batch_size, loss3))
             minLoss3 = loss3
     # 可能要用 PSENR SSIM 來評估 除存與否
+    log.SetLogTime("e%2d_Valid"%(epoch))
     remainingIndex = step*batch_size
-#    batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, ctype = "remaining")
-#    batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, ctype = "remaining")
-#    batch_out  = dataloader.GetData("dataset128_x", remainingIndex, ctype = "remaining")
+    batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, ctype = "remaining")
+    batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, ctype = "remaining")
+    batch_out  = dataloader.GetData("dataset128_x", remainingIndex, ctype = "remaining")
+    
+    predit1 = model1.predict(batch_in)
+    predit2 = model2.predict(predit1)
+    
+    tmp_psnr1, tmp_ssim1 = Cal_PSNR_SSIM(predit1, batch_mid)
+    tmp_psnr3, tmp_ssim3 = Cal_PSNR_SSIM(predit2, batch_out)
+    
+    init_op = tf.initialize_all_variables() # 不知道會不會影響 KERAS????!?!?!??!?!
+    with tf.Session() as sess:
+        sess.run(init_op) #execute init_op
+        #print the random values that we sample
+        out_psnr1 = sess.run(tmp_psnr1)
+        out_ssim1 = sess.run(tmp_ssim1)
+        out_psnr3 = sess.run(tmp_psnr3)
+        out_ssim3 = sess.run(tmp_ssim3)
+    log.SetLogTime("e%2d_Valid"%(epoch), mode = "end")
     # LOSS 紀錄
     if epoch % 1 == 0:
         # save loss
-        log.AppendLossIn("loss_32-64", loss1)
+        log.AppendLossIn("loss_32-64",  loss1)
         log.AppendLossIn("loss_32-128", loss3)
-#        log.AppendLossIn("PSNR", psnr_epoch)
-#        log.AppendLossIn("SSIM", ssim_epoch)
+        log.AppendLossIn("PSNR_32-64",  out_psnr1)
+        log.AppendLossIn("SSIM_32-64",  out_ssim1)
+        log.AppendLossIn("PSNR_32-128", out_psnr3)
+        log.AppendLossIn("SSIM_32-128", out_ssim3)
     # save weight
     model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_END_w.h5'%(epoch, model1.name, batch_size, loss1))
     model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_END_w.h5'%(epoch, model2.name, batch_size, loss3))
