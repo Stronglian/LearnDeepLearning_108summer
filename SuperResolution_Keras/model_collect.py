@@ -35,18 +35,18 @@ def res_block(x_in, filters, scaling=None):
     return x
 
 
-def upsample(x, scale, num_filters):
+def upsample(x, scale, num_filters, name_id = ""):
     def upsample_1(x, factor, **kwargs):
         x = Conv2D(num_filters * (factor ** 2), 3, padding='same', **kwargs)(x)
         return Lambda(subpixel_conv2d(scale=factor))(x)
 
     if scale == 2:
-        x = upsample_1(x, 2, name='conv2d_1_scale_2')
+        x = upsample_1(x, 2, name='conv2d_1_scale_2_%d'%(name_id))
     elif scale == 3:
-        x = upsample_1(x, 3, name='conv2d_1_scale_3')
+        x = upsample_1(x, 3, name='conv2d_1_scale_3_%d'%(name_id))
     elif scale == 4:
-        x = upsample_1(x, 2, name='conv2d_1_scale_2')
-        x = upsample_1(x, 2, name='conv2d_2_scale_2')
+        x = upsample_1(x, 2, name='conv2d_1_scale_2_%d'%(name_id))
+        x = upsample_1(x, 2, name='conv2d_2_scale_2_%d'%(name_id))
 
     return x
 """
