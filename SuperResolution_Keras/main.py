@@ -55,9 +55,9 @@ dataloader = DataLoader(dataFolder = "./datasetNPY/", batch_size = batch_size)
 # mainModel
 def Model_Block(scale = 2, num_filters = 64, num_res_blocks = 8, res_block_scaling = None, model_name = None, x_in = None, name_id=""): #origin (4, 64, 16, None)
     if x_in is None:
-        x_in = Input(shape=(None, None, 3))
+        x_in = Input(shape = (None, None, 3))
         x = Lambda(normalize)(x_in)
-        x = b1 = Conv2D(num_filters, 3, padding='same')(x)
+        x = b1 = Conv2D(num_filters, 3, padding = 'same')(x)
     else:
         x = b1 = x_in
     
@@ -66,8 +66,8 @@ def Model_Block(scale = 2, num_filters = 64, num_res_blocks = 8, res_block_scali
     b1 = Conv2D(num_filters, 3, padding='same')(b1) # 老師畫的圖 沒有這步驟
     x = Add()([x, b1])
 
-    x = b2 = upsample(x, scale, num_filters, name_id=name_id)
-    x = Conv2D(3, 3, padding='same')(x)
+    x = b2 = upsample(x, scale, num_filters, name_id = name_id)
+    x = Conv2D(3, 3, padding = 'same')(x)
 #    x = upsample(x, scale, num_filters)
 #    x = b2 = Conv2D(3, 3, padding='same')(x)
 
@@ -75,10 +75,10 @@ def Model_Block(scale = 2, num_filters = 64, num_res_blocks = 8, res_block_scali
 #    return b2, Model(input = x_in, output = x, name=model_name)
     return x_in, x, b2 # in, out, branch
 #%% 
-x_in, x_64,  m_branch = Model_Block(name_id="32-64") # 32-64
-_,    x_128, _        = Model_Block(x_in = m_branch, name_id="64-128") # 64-128
+x_in, x_64,  m_branch = Model_Block(name_id="_32-64") # 32-64
+_,    x_128, _        = Model_Block(x_in = m_branch, name_id = "_64-128") # 64-128
 model_all = Model(input = x_in, output = [x_64, x_128])
-model_all.compile(optimizer='adam',loss=['mse', 'mse'], name="x32to64to128")
+model_all.compile(optimizer='adam',loss=['mse', 'mse'], name = "x32to64to128")
 model_all.summary()
 #%%
 #m_branch, model1 = Model_TEST(model_name = "x32-x64_model")
