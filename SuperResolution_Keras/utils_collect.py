@@ -76,21 +76,21 @@ def GetData(dict_input, dict_key,  batch_index, batch_size, index_shuffle, dtype
     return dict_input[dict_key][index_shuffle[batch_index : batch_index+batch_size], :, :].astype(dtype)
 
 class DataLoader:
-    def __init__(self, dataFolder, batch_size):
+    def __init__(self, dataFolder, batch_size, train_ratio = 0.8):
         """
         當作資料夾裡面是乾淨(只有需要)的東西的來做
         """
-#        dataFolder = "./datasetNPY/"
         self.dataFolder = dataFolder
-        self.UpdateDataset(dataFolder);
+        self.UpdateDataset(dataFolder, boolNew = True);
         # shuffle
         self.ShuffleIndex(index_shuffle = None, boolReset = True);
 #        self.ShuffleIndex();
         # 
-        self.batch_size = batch_size
+        self.batch_size  = batch_size
+        self.train_ratio = train_ratio
         # 分配 valid，看是要指定，還是直接取隨機
         return
-    def UpdateDataset(self, dataFolder, boolNew = True):
+    def UpdateDataset(self, dataFolder, boolNew = False):
         subfolderList = os.listdir(dataFolder)
         if boolNew:
             self.dataSet = dict()
@@ -107,13 +107,17 @@ class DataLoader:
             self.index_shuffle = np.array([i for i in range(len(self.dataSet[list(self.dataSet.keys())[0]]))], dtype=np.int)
         if index_shuffle is None:
             index_shuffle = self.index_shuffle
-        np.random.shuffle(index_shuffle);
+        np.random.shuffle(index_shuffle); # 會連帶
+        self.batch_index = 0
         return
 #    def ShuffleIndex(self, boolReset = False):
 #        if boolReset:
 #            self.index_shuffle = np.array([i for i in range(len(self.dataSet[list(self.dataSet.keys())[0]]))], dtype=np.int)
 #        np.random.shuffle(self.index_shuffle);
 #        return
+    def CalMaxIter(self):
+        self.iter_max = int(len(self.dataSet["dataset32_y"])//self.batch_size * self.train_ratio)
+        return self.iter_max
     def GetData(self, dict_key,  batch_index, batch_size = None, dtype = np.float, ctype = None):
         """
         要回傳特定的量與類型
@@ -132,6 +136,18 @@ class DataLoader:
         獲取指定資料數量
         """
         pass
+    # 用 ITER 跑?
+    def __iter__(self): # ??
+        return self
+    def __next__(self):
+        if None: # 結束
+            raise StopIteration
+        else:
+            self.batch_index += self.batch_size
+            batch_in   = self.GetData("dataset32_x",  self.batch_index, self.batch_size)
+            batch_mid  = self.GetData("dataset64_x",  self.batch_index, self.batch_size)
+            batch_out  = self.GetData("dataset128_x", self.batch_index, self.batch_size)
+            return batch_in, batch_mid, batch_out
 #%% Time
 """
 https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/369869/

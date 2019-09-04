@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from utils_collect import LoadNPY, GetData, OWNLogger
-from utils_collect import show_result, show_result_row
+from utils_collect import OWNLogger, DataLoader
+from utils_collect import show_result, show_result_row, LoadNPY, GetData
 import os 
 import numpy as np
 import tensorflow as tf
@@ -26,7 +26,7 @@ from model_collect import psnr, ssim
 #from keras.applications.vgg16 import VGG16
 
 #%% FLOW CONTROL
-INT_FLOW_CONTROL = [1]
+INT_FLOW_CONTROL = [1, 2, 3]
 DICT_FLOW_NAME = {1:"載入資料庫", 
                   2:"網路建構",
                   3:"訓練",
@@ -40,7 +40,7 @@ epochs = 40
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_path = None # list
 #%% logger 
-saveFolder = "./result/_e{1}_b{2}_{0}".format("1", epochs, batch_size)
+saveFolder = "./result/_e{1}_b{2}_{0}".format("TEST", epochs, batch_size)
 try:
     os.makedirs(saveFolder)
 except:
@@ -48,15 +48,16 @@ except:
 
 log = OWNLogger(logNPY = saveFolder, lossName=["loss_32-64", "loss_32-128", "PSNR", "SSIM"])
 #%% LOAD DATASET
-dataFolder = "./datasetNPY/"
-subfolderList = os.listdir(dataFolder)
-dataSet = dict()
-for _n in subfolderList:
-    tmpDict = LoadNPY(dataFolder+_n)
-    dataSet.update(tmpDict)
-#shuffle
-index_shuffle = np.array([i for i in range(len(dataSet["dataset32_x"]))], dtype=np.int)
-np.random.shuffle(index_shuffle)
+#dataFolder = "./datasetNPY/"
+#subfolderList = os.listdir(dataFolder)
+#dataSet = dict()
+#for _n in subfolderList:
+#    tmpDict = LoadNPY(dataFolder+_n)
+#    dataSet.update(tmpDict)
+##shuffle
+#index_shuffle = np.array([i for i in range(len(dataSet["dataset32_x"]))], dtype=np.int)
+#np.random.shuffle(index_shuffle)
+dataloader = DataLoader(dataFolder = "./datasetNPY/", batch_size = batch_size)
 #%% MODEL
 # mainModel
 def Model_TEST(scale = 2, num_filters = 64, num_res_blocks = 8, res_block_scaling = None, model_name = None, x_in = None): #origin (4, 64, 16, None)
@@ -79,14 +80,6 @@ def Model_TEST(scale = 2, num_filters = 64, num_res_blocks = 8, res_block_scalin
 
     x = Lambda(denormalize)(x)
     return b2, Model(x_in, x, name=model_name)
-#    # 忘了怎架 R block 果斷放棄
-#    input_img = Input(shape)
-#    # https://github.com/krasserm/super-resolution/blob/master/example-edsr.ipynb
-#    # https://github.com/krasserm/super-resolution/blob/master/model/edsr.py
-#    # https://github.com/krasserm/super-resolution/blob/master/model/common.py
-#    # construct the autoencoder model
-#    outputModel = Model(inputs=input_img, outputs=layer_output)
-#    return outputModel
 
 #%%
 m_branch, model1 = Model_TEST(model_name="x32-x64_model")
@@ -99,31 +92,35 @@ _, model2 = Model_TEST(model_name="x64-x128_model")
 model2.summary()
 model2.compile('adam',loss='mse')
 
-#model3 = Model(input = model1.input, output = [m_branch, model2.output])
+#model3 = Model(input = model1.input, output = [model1.output, model2.output])
+#model3.compile('adam',loss='mse')
 #%% LOAD MODEL
 if model_weight_path:
     model1.load_weights(model_weight_path[0], by_name=True)
     model2.load_weights(model_weight_path[1], by_name=True)
 #%% train parm set
-itr = int(len(dataSet["dataset32_x"])//batch_size) #207.75
-print("epoch: %d, batch_szie: %d, itr max: %d"%(epochs, batch_size, itr))
+itr_max = dataloader.CalMaxIter() # int(len(dataSet["dataset32_x"])//batch_size) #207.75
+print("epoch: %d, batch_szie: %d, itr max: %d"%(epochs, batch_size, itr_max))
 minLoss1 = minLoss2 = minLoss3 = 100000000000
 # LOG
 log.ShowLocalTime()
 log.SetLogTime("train")
-log.UpdateProgSetting(itrMax = itr, batch_size = batch_size, epochs = epochs)
-#%% TRAIN #要照她的嗎? https://github.com/krasserm/super-resolution/blob/master/train.py
+log.UpdateProgSetting(itrMax = itr_max, batch_size = batch_size, epochs = epochs)
+#%% TRAIN #要照它的嗎? https://github.com/krasserm/super-resolution/blob/master/train.py
 for epoch in range(epochs):
-    batch_index = 0
-    log.SetLogTime("e%2d"%(epoch))
     print("epoch", epoch)
-    for step in range(itr): # 壓制這個，把剩下的當 valid 也是方案
-        batch_in  = GetData(dataSet, "dataset32_x",  batch_index, batch_size, index_shuffle) 
-        batch_mid = GetData(dataSet, "dataset64_x",  batch_index, batch_size, index_shuffle)
-        batch_out = GetData(dataSet, "dataset128_x", batch_index, batch_size, index_shuffle)
+    log.SetLogTime("e%2d"%(epoch))
+    batch_index = 0
+#    for step, (batch_in, batch_mid, batch_out) in enumerate(dataloader):
+    for step in range(itr_max): # 壓制這個，把剩下的當 valid 也是方案
+        batch_in  = dataloader.GetData("dataset32_x",  batch_index, batch_size)
+        batch_mid = dataloader.GetData("dataset64_x",  batch_index, batch_size)
+        batch_out = dataloader.GetData("dataset128_x",  batch_index, batch_size)
+#        batch_in  = GetData(dataSet, "dataset32_x",  batch_index, batch_size, index_shuffle) 
+#        batch_mid = GetData(dataSet, "dataset64_x",  batch_index, batch_size, index_shuffle)
+#        batch_out = GetData(dataSet, "dataset128_x", batch_index, batch_size, index_shuffle)
         batch_index += batch_size
         
-#        
         loss1 = model1.train_on_batch(batch_in, batch_mid)
 #        loss2 = model2.train_on_batch(batch_mid, batch_out)
         loss3 = model2.train_on_batch(model1.predict(batch_in), batch_out)
@@ -154,6 +151,11 @@ for epoch in range(epochs):
                 model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo_w.h5'%(epoch, model2.name, batch_size, loss3))
             minLoss3 = loss3
     # 可能要用 PSENR SSIM 來評估 除存與否
+    remainingIndex = step*batch_size
+#    batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, ctype = "remaining")
+#    batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, ctype = "remaining")
+#    batch_out  = dataloader.GetData("dataset128_x", remainingIndex, ctype = "remaining")
+    # LOSS 紀錄
     if epoch % 1 == 0:
         # save loss
         log.AppendLossIn("loss_32-64", loss1)
@@ -163,7 +165,6 @@ for epoch in range(epochs):
 #        log.AppendLossIn("SSIM", ssim_epoch)
     # save weight
     model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_END_w.h5'%(epoch, model1.name, batch_size, loss1))
-#    model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_END_w.h5'%(epoch, model2.name, batch_size, loss2))
     model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_END_w.h5'%(epoch, model2.name, batch_size, loss3))
         
     log.SetLogTime("e%2d"%(epoch), mode = "end")
@@ -171,7 +172,9 @@ for epoch in range(epochs):
     print('==========epcohs: %d, loss1: %.5f, loss3:, %.5f ======='%(epoch, loss1, loss3))
     # epoch 結束後，shuffle
     if epoch % 1 == 0:
-        np.random.shuffle(index_shuffle)
+        dataloader.ShuffleIndex()
+#        np.random.shuffle(index_shuffle)
+    break
 #%% SAVE MODEL 上面存過了
 #model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
 #model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
@@ -179,6 +182,6 @@ log.SetLogTime("train", mode = "end")
 #partModel_2.save(partModel_2.name+'.h5')
 log.SaveLog2NPY()
 #%% USE
-predict1 = model1.predict(dataSet["dataset32_x"][:5,:])
-predict2 = model2.predict(dataSet["dataset64_x"][:5,:])
+predict1 = model1.predict(dataloader.dataSet["dataset32_x"][:5,:])
+predict2 = model2.predict(dataloader.dataSet["dataset64_x"][:5,:])
 predictFinal = model2.predict(predict1)
