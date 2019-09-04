@@ -108,7 +108,6 @@ class DataLoader:
         if index_shuffle is None:
             index_shuffle = self.index_shuffle
         np.random.shuffle(index_shuffle); # 會連帶
-        self.batch_index = 0
         return
 #    def ShuffleIndex(self, boolReset = False):
 #        if boolReset:
@@ -141,9 +140,10 @@ class DataLoader:
         return self.dataSet[dict_key][class_split, :, :].astype(dtype)
     # 用 ITER 跑?
     def __iter__(self): # ??
+        self.batch_index = 0
         return self
     def __next__(self):
-        if self.batch_index >= self.iter_max: # 結束
+        if self.batch_index >= self.iter_max * self.batch_size: # 結束
             raise StopIteration
         else:
             batch_in  = self.GetData("dataset32_x",  self.batch_index)#, self.batch_size)
@@ -200,7 +200,7 @@ class OWNLogger:
                 print(_key, _key2, time.ctime(self.dictLog[_key][_key2]))
         return
     # TIME
-    def SetLogTime(self, tag, mode = "start"):
+    def SetLogTime(self, tag, mode = "start", boolPrint = False):
         """
         mode:
             "start"
@@ -209,6 +209,8 @@ class OWNLogger:
             epoch%d
             train
         """
+        if boolPrint:
+            print("=", tag, mode)
         self.dictLog["TIME"][tag+"_"+mode] = time.time()
         if mode == "end":
             if tag+"_start" not in list(self.dictLog["TIME"].keys()):
