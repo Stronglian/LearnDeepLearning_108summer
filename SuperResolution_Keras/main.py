@@ -33,12 +33,12 @@ DICT_FLOW_NAME = {1:"載入資料庫",
                   6:"評估"}
 #%% 參數設定 - 
 # train
-epochs = 3 #25
+epochs = 1 #25
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_folder = "./"
 model_weight_path = None # list
 #model_weight_path = ["e40_x32-x64_model_b16_lo365.12378_w.h5", None] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
-model_discription = "Y-struct_e+3"
+model_discription = "x_Y-struct_e+3"
 #%% logger 
 saveFolder = "./result/_e{1:0>2d}_b{2}_{0}/".format(model_discription, epochs, batch_size)
 try:
@@ -54,7 +54,9 @@ log = OWNLogger(logNPY = saveFolder,
 dataloader = DataLoader(dataFolder = "./datasetNPY/", batch_size = batch_size)
 #%% MODEL
 # mainModel
-def Model_Block(scale = 2, num_filters = 64, num_res_blocks = 8, res_block_scaling = None, model_name = None, x_in = None, name_id=""): #origin (4, 64, 16, None)
+def Model_Block(scale = 2, num_filters = 64, num_res_blocks = 8, 
+                res_block_scaling = None, model_name = None, x_in = None,
+                name_id = "", name_output = None): #origin (4, 64, 16, None)
     if x_in is None:
         x_in = Input(shape = (None, None, 3))
         x = Lambda(normalize)(x_in)
@@ -72,16 +74,18 @@ def Model_Block(scale = 2, num_filters = 64, num_res_blocks = 8, res_block_scali
 #    x = upsample(x, scale, num_filters)
 #    x = b2 = Conv2D(3, 3, padding='same')(x)
 
-    x = Lambda(denormalize)(x)
+    x = Lambda(denormalize, name = name_output)(x)
 #    return b2, Model(input = x_in, output = x, name=model_name)
     return x_in, x, b2 # in, out, branch
 #%% MODEL compile
-x_in, x_64,  m_branch = Model_Block(name_id="_32-64") # 32-64
-_,    x_128, _        = Model_Block(x_in = m_branch, name_id = "_64-128") # 64-128
-#model_all = Model(input = x_in, output = {"to64":x_64, "to128":x_128}, name = "x32to64to128")
-model_all = Model(input = x_in, output = [x_64, x_128], name = "x32to64to128_model")
-#model_all.compile(optimizer='adam', loss = {"to64":'mse', "to128":'mse'})
-model_all.compile(optimizer='adam', loss = ['mse', 'mse'])
+x_in, x_64,  m_branch = Model_Block(name_id="_32-64", name_output = "to64") # 32-64
+_,    x_128, _        = Model_Block(x_in = m_branch, name_id = "_64-128", name_output = "to128") # 64-128
+
+#model_all = Model(input = x_in, output = [x_64, x_128], name = "x32to64to128_model")
+#model_all.compile(optimizer='adam', loss = ['mse', 'mse'])
+model_all = Model(input = x_in, output = {"to64":x_64, "to128":x_128}, name = "x32to64to128")
+model_all.compile(optimizer='adam', loss = {"to64":'mse', "to128":'mse'})
+
 model_all.summary()
 #%% LOAD MODEL
 if model_weight_path and (7 in INT_FLOW_CONTROL):
@@ -153,8 +157,8 @@ for epoch in range(epochs):
     log.SetLogTime("e%2d"%(epoch), boolPrint=True)
     batch_index = 0
     for step, (batch_in, batch_mid, batch_out) in enumerate(dataloader):
-#        loss_out = model_all.train_on_batch(x = batch_in, y = {"to64":batch_mid, "to128":batch_out})
-        loss_out = model_all.train_on_batch(x = batch_in, y = [batch_mid, batch_out])
+        loss_out = model_all.train_on_batch(x = batch_in, y = {"to64":batch_mid, "to128":batch_out})
+#        loss_out = model_all.train_on_batch(x = batch_in, y = [batch_mid, batch_out])
         
         if step%50 == 0 :
             print("itr: %d loss:"%(step), *loss_out)
@@ -215,6 +219,7 @@ for epoch in range(epochs):
     # epoch 結束後，shuffle
     if epoch % 1 == 0:
         dataloader.ShuffleIndex()
+    break # for TEST
 #%% SAVE MODEL 上面存過了
 #model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
 #model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
