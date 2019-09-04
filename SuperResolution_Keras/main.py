@@ -174,9 +174,9 @@ for epoch in range(epochs):
     # 可能要用 PSENR SSIM 來評估 除存與否
     log.SetLogTime("e%02d_Valid"%(epoch), boolPrint=True)
     remainingIndex = (step+1)*batch_size
-    batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, batch_size = 5, ctype = "remaining")
-    batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, batch_size = 5, ctype = "remaining")
-    batch_out  = dataloader.GetData("dataset128_x", remainingIndex, batch_size = 5, ctype = "remaining")
+    batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, batch_size = 2, ctype = "remaining")
+    batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, batch_size = 2, ctype = "remaining")
+    batch_out  = dataloader.GetData("dataset128_x", remainingIndex, batch_size = 2, ctype = "remaining")
 #    batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, ctype = "remaining")
 #    batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, ctype = "remaining")
 #    batch_out  = dataloader.GetData("dataset128_x", remainingIndex, ctype = "remaining")
