@@ -78,7 +78,7 @@ def Model_Block(scale = 2, num_filters = 64, num_res_blocks = 8, res_block_scali
 x_in, x_64,  m_branch = Model_Block(name_id="_32-64") # 32-64
 _,    x_128, _        = Model_Block(x_in = m_branch, name_id = "_64-128") # 64-128
 model_all = Model(input = x_in, output = [x_64, x_128])
-model_all.compile(optimizer='adam', loss={0:'mse', 1:'mse'}, name = "x32to64to128")
+model_all.compile(optimizer='adam', loss = {"to64":'mse', "to128":'mse'}, name = "x32to64to128")
 model_all.summary()
 #%%
 #m_branch, model1 = Model_TEST(model_name = "x32-x64_model")
@@ -158,7 +158,7 @@ for epoch in range(epochs):
     log.SetLogTime("e%2d"%(epoch), boolPrint=True)
     batch_index = 0
     for step, (batch_in, batch_mid, batch_out) in enumerate(dataloader):
-        loss_out = model_all.train_on_batch(x = batch_in, y = {0:batch_mid, 1:batch_out})
+        loss_out = model_all.train_on_batch(x = batch_in, y = {"to64":batch_mid, "to128":batch_out})
         
         if step%50 == 0 :
             print("itr: %d loss:"%(step), *loss_out)
