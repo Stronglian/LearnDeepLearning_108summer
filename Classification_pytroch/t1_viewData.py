@@ -7,7 +7,7 @@ AwA2
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from utils_collect import show_result_row
+from utils_collect import show_result_row, SaveNPY
 #%%
 
 
@@ -25,6 +25,6 @@ for _n in os.listdir(folderData):
             trainLab = np.load(folderData+_n)
         if d_type == "attribute": # 0.0~1.0
             trainAtt = np.load(folderData+_n) 
-#    dictData[t_type][d_type] = np.load(folderData+_n)
+    dictData[t_type][d_type] = np.load(folderData+_n)
             
 show_result_row(trainImg[:5])

@@ -45,3 +45,33 @@ def show_result_row(img_list, boolSave = False, strName = "tmp", strFolder = "./
 
 def show_val_info(strOut, listValue):
     print(strOut, "len:", len(listValue), "avg:", np.average(listValue), "max:", np.max(listValue), "min:", np.min(listValue))
+    
+#%%
+def LoadJSON(nameJSON):#, nameDict):
+    #讀取
+    try:
+        with open(nameJSON, 'r') as inputfile:
+            nameDict = json.load(inputfile)
+    except FileNotFoundError as e:
+        print(e)
+        nameDict = dict() #{name:{filename:{"id":,"date":},},}
+    return nameDict
+
+def DumpJSON(nameJSON, nameDict):
+    with open(nameJSON, 'w') as outfile:
+        json.dump(nameDict, outfile)
+    return
+
+def LoadNPY(nameNPY, shape = None):
+    try:
+#        with np.load(nameNPY) as inputfile:
+#            nameArr = inputfile.copy()
+        nameArr = np.load(nameNPY, allow_pickle = True).item()
+    except FileNotFoundError as e:
+        print(e)
+        nameArr = np.zeros(shape)
+    return nameArr
+
+def SaveNPY(nameNPY, nameArr):
+    np.save(nameNPY, nameArr)
+    return
