@@ -48,7 +48,8 @@ def LoadJSON(nameJSON):#, nameDict):
     try:
         with open(nameJSON, 'r') as inputfile:
             nameDict = json.load(inputfile)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        print(e)
         nameDict = dict() #{name:{filename:{"id":,"date":},},}
     return nameDict
 #%% data - basic
@@ -62,7 +63,8 @@ def LoadNPY(nameNPY, shape = None):
 #        with np.load(nameNPY) as inputfile:
 #            nameArr = inputfile.copy()
         nameArr = np.load(nameNPY, allow_pickle = True).item()
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        print(e)
         nameArr = np.zeros(shape)
     return nameArr
 
