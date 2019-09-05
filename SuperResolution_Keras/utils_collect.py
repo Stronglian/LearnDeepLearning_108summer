@@ -40,8 +40,17 @@ def show_result_row(img_list, boolSave = False, strName = "tmp", strFolder = "./
     plt.show()
     return
 
-def show_val_info(strOut, listValue):
-    print(strOut, "len:", len(listValue), "avg:", np.average(listValue), "max:", np.max(listValue), "min:", np.min(listValue))
+def show_val_info(strOut, listValue, boolReturnDict = False, boolPrint = True):
+    val_len = len(listValue)
+    val_max = np.max(listValue)
+    val_min = np.min(listValue)
+    val_avg = np.average(listValue)
+#    print(strOut, "len:", len(listValue), "avg:", np.average(listValue), "max:", np.max(listValue), "min:", np.min(listValue))    
+    if boolPrint:
+        print("%s: len:%d, avg:%.5f, max:%.2f, min:%.5f"%(strOut, val_len, val_avg, val_max, val_min))
+    if boolReturnDict:
+        return {"len":val_len, "avg":val_avg, "max":val_max, "min":val_min}
+#        return val_len, val_avg, val_max, val_min
 #%%    
 def LoadJSON(nameJSON):#, nameDict):
     #讀取
@@ -255,23 +264,24 @@ def S_Clip(in_list, max_show = 255, min_show = 0):
         in_list = np.clip(in_list, min_show, max_show)
     return in_list
 
-def ShowFig(x_list, input_list, max_show = None, strShowSaveTitle = "TMP", 
-            boolSave = False, strSaveFolder = "./"):
+def ShowFig(x_list, input_list, max_show = None, boolClip = True,
+            strShowSaveTitle = "TMP", boolSave = False, strSaveFolder = "./"):
     if max_show == None:
         max_show = np.average(input_list)
-    input_list = S_Clip(input_list, max_show)
-    plt.title(strShowSaveTitle)
+    if boolClip:
+        input_list = S_Clip(input_list, max_show)
+    plt.title("%s (limit: %.2f)"%(strShowSaveTitle, max_show))
     plt.plot(x_list, input_list)#, linewidth=2.5)#, "-o")
     if boolSave:
         plt.savefig("%s%s.jpg"%(strSaveFolder, strShowSaveTitle))
     plt.show()
     return
 
-#%%
-if __name__ == "__main__":
+#%% 2Model
+if __name__ == "__main__" and False:
     # load log
-    LOSS = "loss"
-    strNPYname = "./w3_NPY/log_from2019-08-31 16_10_45.npy"
+    LOSS = "LOSS"
+    strNPYname = "./2Model_e10_b16__continue/log_from2019-09-04 16_16_23.npy"
     if not os.path.exists(strNPYname):
         raise IOError(strNPYname, "not exists")
 #    tmpLogger = OWNLogger() 
@@ -295,6 +305,93 @@ if __name__ == "__main__":
         max_list, min_list = MakeMaxMinList(loss_list)
         # 顯示 # 需要浮動限制?
         ShowFig(x_list, loss_list, max_show = 2000,   strShowSaveTitle = "%s_all"%(_n_loss), boolSave = False)
-#        ShowFig(x_list, max_list,  max_show = 110000, strShowSaveTitle = "%s_max"%(_n_loss), boolSave = True)
+#        ShowFig(x_list, max_list,  max_show = 110000, strShowSaveTitle = "%s_max"%(_n_loss), boolSave = False)
         ShowFig(x_list, min_list,  max_show = 400,    strShowSaveTitle = "%s_min"%(_n_loss), boolSave = False)
         break
+
+#%%
+def CalValidDict(input_list, type_list = ["avg", "max", "min"]):
+    # initial
+    dictOut = dict()
+    for _k in type_list:
+        dictOut[_k] = list()
+    for _l in input_list:
+        dict_tmp = show_val_info("CAL", _l, boolPrint=False, boolReturnDict=True)
+        for _k in type_list:
+            dictOut[_k].append(dict_tmp[_k])
+    return dictOut
+def ShowValMaxMinFig(x_list, in_list, strLossName, max_show = None, boolDictShow = {"val":True, "max":False, "min":True}):
+    ### mack max/min list
+    max_list, min_list = MakeMaxMinList(loss_list)
+    ### 顯示 # 需要浮動限制?
+    max_show = max_show if max_show else np.max(loss_list)
+    try:
+        if boolDictShow["val"]:
+            ShowFig(x_list, loss_list, max_show = max_show, strShowSaveTitle = "%s_all"%(strLossName), boolSave = boolSave)
+    except KeyError:
+        pass
+    try:
+        if boolDictShow["max"]:
+            ShowFig(x_list, max_list,  max_show = max_show, strShowSaveTitle = "%s_max"%(strLossName), boolSave = boolSave)
+    except KeyError:
+        pass
+    try:
+        if boolDictShow["min"]:
+            ShowFig(x_list, min_list,  max_show = max_show, strShowSaveTitle = "%s_min"%(strLossName), boolSave = boolSave)
+    except KeyError:
+        pass
+    return
+#%% Y-Mode
+if __name__ == "__main__" and True:
+    # Loss 計算
+#    AMOUNT_LOSS_TYPE = 3
+    AMOUNT_LOSS_NUM  = 2
+    boolSave = False
+    type_list = ["avg", "max", "min"]
+    ## LOAD
+    strNPYname = './result/Y-struct_e06_b16_e+1/log_from2019-09-05 08_58_26.npy' # log.logNPY
+    if not os.path.exists(strNPYname):
+        raise IOError(strNPYname, "not exists")
+    tmp_dictLog = np.load(strNPYname, allow_pickle=True).item()
+    tmp_dictLog = tmp_dictLog["LOSS"]
+    print("key:", tmp_dictLog.keys())
+    ## SHOW
+    for _i, _n_loss in enumerate(np.sort(list(tmp_dictLog.keys()))): #
+        print(_i, _n_loss, "==="*20)
+        ### info 
+        loss_amount = len(tmp_dictLog[_n_loss])    # 資料數量
+        x_list = [_j for _j in range(loss_amount)] # 橫軸
+        if _i // AMOUNT_LOSS_NUM == 2 and False: # LOSS
+            print("LOSS"); 
+            loss_list = tmp_dictLog[_n_loss].copy()    # 主要資料
+            ### show info
+            show_val_info(_n_loss, loss_list);
+            ShowValMaxMinFig(x_list, loss_list, _n_loss, boolDictShow = {"val":True, "max":True, "min":False});
+#            ### mack max/min list
+#            max_list, min_list = MakeMaxMinList(loss_list)
+#            ### 顯示 # 需要浮動限制?
+#            max_show = np.max(loss_list)
+#            ShowFig(x_list, loss_list, max_show = max_show, strShowSaveTitle = "%s_all"%(_n_loss), boolSave = boolSave)
+#    #        ShowFig(x_list, max_list,  max_show = 1900, strShowSaveTitle = "%s_max"%(_n_loss), boolSave = boolSave)
+#            ShowFig(x_list, min_list,  max_show = max_show, strShowSaveTitle = "%s_min"%(_n_loss), boolSave = boolSave)
+        if _i // AMOUNT_LOSS_NUM in [0, 1]: # PSNR、SSIM
+            loss_list_list = tmp_dictLog[_n_loss].copy()    # 主要資料
+            dict_a = CalValidDict(loss_list_list)
+            ### PICK - avg
+            _k = "avg"
+            loss_list = dict_a[_k]
+            ### SHOW INFO
+            show_val_info("%s(%s)"%(_n_loss,_k), loss_list);
+            ShowValMaxMinFig(x_list, loss_list, "%s(%s)"%(_n_loss, _k), boolDictShow = {"val":True, "max":True, "min":False});
+            ### PICK - max
+            _k = "max"
+            loss_list = dict_a[_k]
+            ### SHOW INFO
+            show_val_info("%s(%s)"%(_n_loss,_k), loss_list);
+            ShowValMaxMinFig(x_list, loss_list, "%s(%s)"%(_n_loss, _k), boolDictShow = {"max":True});
+            ### PICK - min
+            _k = "min"
+            loss_list = dict_a[_k]
+            ### SHOW INFO
+            show_val_info("%s(%s)"%(_n_loss,_k), loss_list);
+            ShowValMaxMinFig(x_list, loss_list, "%s(%s)"%(_n_loss, _k), boolDictShow = {"min":True});
