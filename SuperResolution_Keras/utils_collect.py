@@ -134,7 +134,7 @@ class DataLoader:
         else: # None and other
             batch_size = batch_size if batch_size else self.batch_size
             class_split = self.index_shuffle[batch_index : batch_index + batch_size]
-        return self.dataSet[dict_key][class_split, :, :].astype(dtype)
+        return self.dataSet[dict_key][class_split].astype(dtype)
     # 用 ITER 跑?
     def __iter__(self): # ??
         self.batch_index = 0
@@ -143,9 +143,9 @@ class DataLoader:
         if self.batch_index >= self.iter_max * self.batch_size: # 結束
             raise StopIteration
         else:
-            batch_in  = self.GetData("dataset32_x",  self.batch_index)#, self.batch_size)
-            batch_mid = self.GetData("dataset64_x",  self.batch_index)#, self.batch_size)
-            batch_out = self.GetData("dataset128_x", self.batch_index)#, self.batch_size)
+            batch_in  = self.GetData("dataset32_x",  self.batch_index, self.batch_size)
+            batch_mid = self.GetData("dataset64_x",  self.batch_index, self.batch_size)
+            batch_out = self.GetData("dataset128_x", self.batch_index, self.batch_size)
             self.batch_index += self.batch_size
             return batch_in, batch_mid, batch_out
 #%% Time
