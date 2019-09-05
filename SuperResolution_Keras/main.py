@@ -34,7 +34,7 @@ DICT_FLOW_NAME = {1:"載入資料庫",
                   8:"紀錄"}
 #%% 參數設定 - 
 # train
-epochs = 20
+epochs = 6
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_folder = "./result/_e20_b16_Y-struct/"
 #model_weight_path = None # list
@@ -176,11 +176,11 @@ if 3 in INT_FLOW_CONTROL:
                         boolFirst[_l_i] = False
                         print("save model")
                         model_all.save_weights(saveFolder + strModelName_Loss%(epoch, model_all.name, batch_size, _l_i, loss_out[_l_i]))
-            break
+#            break # FRO TEST
         # 可能要用 PSENR SSIM 來評估 除存與否
         log.SetLogTime("e%02d_Valid"%(epoch), boolPrint=True)
-#        remainingIndex = (step+1)*batch_size
-        remainingIndex = (itr_max+1)*batch_size # for TEST
+        remainingIndex = (step+1)*batch_size
+#        remainingIndex = (itr_max)*batch_size # FRO TEST
         batch_in   = dataloader.GetData("dataset32_x",  remainingIndex, ctype = "remaining")
         batch_mid  = dataloader.GetData("dataset64_x",  remainingIndex, ctype = "remaining")
         batch_out  = dataloader.GetData("dataset128_x", remainingIndex, ctype = "remaining")
@@ -224,7 +224,7 @@ if 3 in INT_FLOW_CONTROL:
         # epoch 結束後，shuffle
         if epoch % 1 == 0:
             dataloader.ShuffleIndex()
-        break # for test
+#        break # FRO TESTt
 if 8 in INT_FLOW_CONTROL:
     log.SetLogTime("train", mode = "end")
     log.SaveLog2NPY()
