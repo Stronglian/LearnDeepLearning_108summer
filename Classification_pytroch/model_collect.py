@@ -2,6 +2,11 @@
 """
 模組架設
 """
+"""
+https://pytorch.org/docs/stable/torchvision/models.html
+https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html
+https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/02-intermediate/deep_residual_network/main.py
+"""
 #import torchvision.models as m
 import torch
 import torch.nn as nn
