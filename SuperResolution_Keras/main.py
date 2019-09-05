@@ -36,7 +36,7 @@ DICT_FLOW_NAME = {1:"載入資料庫",
 # train
 epochs = 20
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
-model_weight_folder = "./"
+model_weight_folder = "./result/_e20_b16_Y-struct/"
 #model_weight_path = None # list
 model_weight_path = ["e0_x32to64to128_model_b16_lo1625.05542_lo578.73291_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
 model_discription = "Y-struct_+1"
