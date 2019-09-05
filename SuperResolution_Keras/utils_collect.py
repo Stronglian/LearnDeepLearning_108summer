@@ -15,7 +15,7 @@ import os
 #        plt.imshow(image)
 #    plt.show()
 #    return
-def show_result(img_list):
+def show_result(img_list, boolSave = False, strName = "tmp", strFolder = "./"):
     img_list = img_list.clip(0, 255).astype(np.int)
     for _i in range(len(img_list)):
         plt.imshow(img_list[_i,:,:,::-1])
@@ -24,7 +24,7 @@ def show_result(img_list):
         plt.show()
     return
 
-def show_result_row(img_list):
+def show_result_row(img_list, boolSave = False, strName = "tmp", strFolder = "./"):
     """
     還要再處理輸出照片大小
     """
@@ -35,6 +35,8 @@ def show_result_row(img_list):
         img_out = np.concatenate((img_out, img_tmp), axis=1)
     plt.imshow(img_out)
     plt.axis('off')
+    if boolSave:
+        plt.savefig("%s%s.jpg"%(strFolder, strName))
     plt.show()
     return
 
