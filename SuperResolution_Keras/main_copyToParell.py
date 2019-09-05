@@ -26,14 +26,14 @@ from model_collect import res_block, normalize, denormalize, upsample
 #from keras.applications.vgg16 import VGG16
 
 #%% FLOW CONTROL
-INT_FLOW_CONTROL = [1, 2, 3]
-DICT_FLOW_NAME = {1:"載入資料庫", 
-                  2:"網路建構",
-                  3:"訓練",
-                  7:"載入權重", #可以拿上次不錯、架構相似的繼續訓練
-                  4:"驗證",
-                  5:"測試",
-                  6:"評估"}
+#INT_FLOW_CONTROL = [1, 2, 3]
+#DICT_FLOW_NAME = {1:"載入資料庫", 
+#                  2:"網路建構",
+#                  3:"訓練",
+#                  7:"載入權重", #可以拿上次不錯、架構相似的繼續訓練
+#                  4:"驗證",
+#                  5:"測試",
+#                  6:"評估"}
 #%% 參數設定 - 
 # train
 epochs = 10
@@ -41,9 +41,10 @@ batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_folder = "./result/_e10_b16_2Model_continue/"
 #model_weight_path = None # list
 model_weight_path = ["e9_x32-x64_model_b16_lo371.58945_END_w.h5", "e9_x64-x128_model_b16_lo726.65582_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
-model_discription = "2Model_continue_e+10"
+model_struct = "2Model"
+model_discription = "continue_e+10"
 #%% logger 
-saveFolder = "./result/_e{1:0>2d}_b{2}_{0}/".format(model_discription, epochs, batch_size)
+saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, epochs, batch_size)
 try:
     os.makedirs(saveFolder)
 except:

@@ -39,10 +39,11 @@ batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_folder = "./result/_e20_b16_Y-struct/"
 #model_weight_path = None # list
 model_weight_path = ["e0_x32to64to128_model_b16_lo1625.05542_lo578.73291_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
-model_discription = "Y-struct_+1"
+model_struct = "Y-struct"
+model_discription = "e+1"
 #%% logger 
 if 8 in INT_FLOW_CONTROL:
-    saveFolder = "./result/_e{1:0>2d}_b{2}_{0}/".format(model_discription, epochs, batch_size)
+    saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, epochs, batch_size)
     try:
         os.makedirs(saveFolder)
     except:
