@@ -34,12 +34,12 @@ DICT_FLOW_NAME = {1:"載入資料庫",
                   8:"紀錄"}
 #%% 參數設定 - 
 # train
-epochs = 25
+epochs = 20
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_folder = "./"
 model_weight_path = None # list
 #model_weight_path = ["e40_x32-x64_model_b16_lo365.12378_w.h5", None] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
-model_discription = "Y-struct_e"
+model_discription = "Y-struct"
 #%% logger 
 if 8 in INT_FLOW_CONTROL:
     saveFolder = "./result/_e{1:0>2d}_b{2}_{0}/".format(model_discription, epochs, batch_size)

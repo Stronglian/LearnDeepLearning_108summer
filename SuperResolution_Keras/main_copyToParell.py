@@ -41,7 +41,7 @@ batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_folder = "./load_weight_0904/"
 #model_weight_path = None # list
 model_weight_path = ["e40_x32-x64_model_b16_lo365.12378_w.h5", None] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
-model_discription = "2Model_continue"
+model_discription = "2Model_continue_e+10"
 #%% logger 
 saveFolder = "./result/_e{1:0>2d}_b{2}_{0}/".format(model_discription, epochs, batch_size)
 try:

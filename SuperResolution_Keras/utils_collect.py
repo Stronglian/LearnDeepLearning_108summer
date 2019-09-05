@@ -39,7 +39,7 @@ def show_result_row(img_list):
     return
 
 def show_val_info(strOut, listValue):
-    print(strOut, "avg:", np.average(listValue), "max:", np.max(listValue), "min:", np.min(listValue))
+    print(strOut, "len:", len(listValue), "avg:", np.average(listValue), "max:", np.max(listValue), "min:", np.min(listValue))
 #%%    
 def LoadJSON(nameJSON):#, nameDict):
     #讀取
@@ -129,10 +129,10 @@ class DataLoader:
         """
         要回傳特定的量與類型
         """
-        batch_size = batch_size if batch_size else self.batch_size
         if ctype == "remaining": # 資料分類 # 取剩下的，主要用於 valid
             class_split = self.index_shuffle[batch_index : batch_size]
         else: # None and other
+            batch_size = batch_size if batch_size else self.batch_size
             class_split = self.index_shuffle[batch_index : batch_index + batch_size]
         return self.dataSet[dict_key][class_split, :, :].astype(dtype)
     # 用 ITER 跑?
@@ -286,50 +286,11 @@ if __name__ == "__main__":
         min_loss = np.min(loss_list)
         avg_loss = np.average(loss_list)
         print("%s, len:%d, max:%.2f, min:%.5f, avg:%.5f"%(_n_loss, loss_amount, max_loss, min_loss, avg_loss))
+        show_val_info(_n_loss, loss_list)
         # mack max/min list
         max_list, min_list = MakeMaxMinList(loss_list)
         # 顯示 # 需要浮動限制?
-        ShowFig(x_list, loss_list, max_show = 2000,   strShowSaveTitle = "%s_all"%(_n_loss), boolSave = True)
+        ShowFig(x_list, loss_list, max_show = 2000,   strShowSaveTitle = "%s_all"%(_n_loss), boolSave = False)
 #        ShowFig(x_list, max_list,  max_show = 110000, strShowSaveTitle = "%s_max"%(_n_loss), boolSave = True)
-        ShowFig(x_list, min_list,  max_show = 400,    strShowSaveTitle = "%s_min"%(_n_loss), boolSave = True)
+        ShowFig(x_list, min_list,  max_show = 400,    strShowSaveTitle = "%s_min"%(_n_loss), boolSave = False)
         break
-    # show 
-#%%
-if __name__ == "__main__" and False :
-#    t = OWNLogger()
-#    t.ShowLocalTime()
-#    plt.axis('off')
-#    plt.show()
-#    def plotData(plt, data):
-#      x = [p[0] for p in data]
-#      y = [p[1] for p in data]
-#      plt.plot(x, y, '-o')
-  
-#    tmpLogger = OWNLogger() 
-#    tmpLogger.LoadLog(strNPYname, boolForce=True)
-#    tmp_dictLog = tmpLogger.dictLog
-    
-    MAX_SHOW_ALL = 2000
-    MAX_SHOW_MIN = 200
-#    for _i, _n_loss in enumerate(tmp_dictLog[LOSS].keys()):
-#        if _i != 2:
-#            continue
-        loss_amount = len(tmp_dictLog[LOSS][_n_loss])
-        e_list = [_j for _j in range(loss_amount)]
-        loss_list = tmp_dictLog[LOSS][_n_loss].copy()
-        # show value
-        max_loss = np.max(loss_list)
-        min_loss = np.min(loss_list)
-        print("%s, len:%d, max:%d, min:%d"%(_n_loss, loss_amount, max_loss, min_loss))
-            
-        # clip
-        if max_loss > MAX_SHOW_ALL:
-            loss_list = np.clip(loss_list, 0, MAX_SHOW_ALL)
-        max_list = S_Clip(max_list, 1000000)
-        min_list = S_Clip(min_list, MAX_SHOW_MIN)
-        # show plt
-        plt.plot(e_list, loss_list)#, linewidth=2.5)#, "-o")
-        plt.show()
-#        break
-    
-    
