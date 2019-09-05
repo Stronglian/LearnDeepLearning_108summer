@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 import os
-#from PIL im
+
 #%% show
 #def show_photo(img):
 #    plt.figure(figsize=(15, 15))
