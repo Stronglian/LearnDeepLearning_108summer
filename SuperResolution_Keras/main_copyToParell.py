@@ -42,7 +42,7 @@ model_weight_folder = "./result/_e10_b16_2Model_continue/"
 #model_weight_path = None # list
 model_weight_path = ["e9_x32-x64_model_b16_lo371.58945_END_w.h5", "e9_x64-x128_model_b16_lo726.65582_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
 model_struct = "2Model"
-model_discription = "continue_e+11"
+model_discription = "e+11"
 #%% logger 
 saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, epochs, batch_size)
 try:
