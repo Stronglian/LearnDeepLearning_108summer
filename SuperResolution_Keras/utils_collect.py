@@ -291,7 +291,7 @@ def CalValidDict(input_list, type_list = ["avg", "max", "min"]):
 
 def ShowValMaxMinFig(x_list, in_list, strLossName, max_show = None
                      , boolDictShow = {"val":True, "max":False, "min":True}
-                     , **darg):
+                     , boolSave = False, **darg):
     ### mack max/min list
     max_list, min_list = MakeMaxMinList(in_list)
     ### 顯示 # 需要浮動限制?
@@ -395,7 +395,7 @@ def CalEpochTimeCost(strNPYname, boolCalAll = False):
     print("%s avg cost: %.3f sec./epoch"%(_tag, time_cost_avg))
     return time_cost_avg, dictTimeCost
 #%% 2Model # Loss 計算
-if __name__ == "__main__" and False:
+if __name__ == "__main__" and True:
     # Loss 計算 - 設定
     AMOUNT_LOSS_NUM  = 2
     boolSave = False
