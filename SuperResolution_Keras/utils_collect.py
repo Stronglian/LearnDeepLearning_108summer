@@ -289,9 +289,9 @@ def CalValidDict(input_list, type_list = ["avg", "max", "min"]):
             dictOut[_k].append(dict_tmp[_k])
     return dictOut
 
-def ShowValMaxMinFig(x_list, in_list, strLossName, max_show = None
-                     , boolDictShow = {"val":True, "max":False, "min":True}
-                     , boolSave = False, **darg):
+def ShowValMaxMinFig(x_list, in_list, strLossName, max_show = None, 
+                     boolDictShow = {"val":True, "max":False, "min":True}, 
+                     boolSave = False, **darg):
     ### mack max/min list
     max_list, min_list = MakeMaxMinList(in_list)
     ### 顯示 # 需要浮動限制?
