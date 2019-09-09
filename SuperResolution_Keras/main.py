@@ -45,6 +45,7 @@ DICT_FLOW_NAME = {1:"載入資料庫",
 #%% 參數設定 - 
 # train
 epochs = 20
+epochs_shuffle = 1
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
 model_weight_folder = "./result/Y-struct_e06_b16_e+7/"
 #model_weight_path = None # list
@@ -162,7 +163,8 @@ if 3 in INT_FLOW_CONTROL:
                           batch_size = batch_size, 
                           epochs = epochs, 
                           model_weight_path = model_weight_path,
-                          model_discription = model_discription)
+                          model_discription = model_discription,
+                          epochs_shuffle = epochs_shuffle)
     # SET
     strShowLoss = "e%02d it%03d %s: %s %.3f <- %.3f"
     strModelName_Loss = 'e%d_%s_b%d_lo%d_%.5f_w.h5'
@@ -233,7 +235,7 @@ if 3 in INT_FLOW_CONTROL:
         log.SetLogTime("e%2d"%(epoch), mode = "end")
         print('==========epcohs: %d, loss0: %.5f, loss1:, %.5f ======='%(epoch, loss_out[0], loss_out[1]))
         # epoch 結束後，shuffle
-        if epoch % 1 == 0:
+        if epoch % epochs_shuffle == 0:
             dataloader.ShuffleIndex()
 #        break # FRO TESTt
 if 8 in INT_FLOW_CONTROL:
