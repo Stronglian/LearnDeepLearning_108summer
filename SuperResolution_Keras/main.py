@@ -2,6 +2,7 @@
 
 from utils_collect import OWNLogger, DataLoader
 from utils_collect import show_result, show_result_row
+from utils_collect import show_val_info
 import os 
 import numpy as np
 import tensorflow as tf
@@ -23,24 +24,33 @@ from keras.layers import Input, Conv2D, Add, Lambda #, Dense,  Flatten, Activati
 from model_collect import res_block, normalize, denormalize, upsample
 #from model_collect import psnr, ssim
 #%% FLOW CONTROL
-INT_FLOW_CONTROL = [1, 2, 4, 3, 8]
+# 正常訓練內容
+INT_FLOW_CONTROL = [1, 2, 4, 3, 8] 
+ANALYSIS_NPY = None
+## 輸出測試用
+#INT_FLOW_CONTROL = [1, 2, 4, 6, 9]   
+## 分析圖表
+#INT_FLOW_CONTROL = [6]
+#ANALYSIS_NPY = './result/Y-struct_e20_b16_e+7/log_from2019-09-06 05_21_48.npy'
+# TAG 說明
 DICT_FLOW_NAME = {1:"載入資料庫", 
                   2:"網路建構",
                   3:"訓練",
                   4:"載入權重", #可以拿上次不錯、架構相似的繼續訓練
 #                  4:"驗證",
                   5:"測試",
-                  6:"評估",
-                  8:"紀錄"}
+                  6:"運行結果評估",
+                  8:"紀錄設置",
+                  9:"跑全圖"}
 #%% 參數設定 - 
 # train
 epochs = 20
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
-model_weight_folder = "./result/Y-struct_e06_b16_e+1/"
+model_weight_folder = "./result/Y-struct_e06_b16_e+7/"
 #model_weight_path = None # list
-model_weight_path = ["e5_x32to64to128_model_b16_lo1175.00415_lo406.49057_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
+model_weight_path = ["e19_x32to64to128_model_b16_lo1352.49109_lo432.89719_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
 model_struct = "Y-struct"
-model_discription = "e+7"
+model_discription = "e+7+20_2-8" # 兩種輸出 2-8 比例
 #%% logger 
 if 8 in INT_FLOW_CONTROL:
     saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, epochs, batch_size)
@@ -87,7 +97,7 @@ if 2 in INT_FLOW_CONTROL:
     _,    x_128, _        = Model_Block(x_in = m_branch, name_id = "_64-128", name_output = "to128") # 64-128
     
     model_all = Model(input = x_in, output = [x_64, x_128], name = "x32to64to128_model") # warning, 似乎要轉成 tensor 再送給 model
-    model_all.compile(optimizer='adam', loss = ['mse', 'mse'])
+    model_all.compile(optimizer='adam', loss = ['mse', 'mse'], loss_weights = [0.3, 0.8])
     #model_all = Model(input = x_in, output = {"to64":x_64, "to128":x_128}, name = "x32to64to128")
     #model_all.compile(optimizer='adam', loss = {"to64":'mse', "to128":'mse'})
     
@@ -217,8 +227,8 @@ if 3 in INT_FLOW_CONTROL:
             log.AppendLossIn("SSIM_32-64",  out_ssim[0])
             log.AppendLossIn("PSNR_32-128", out_psnr[1])
             log.AppendLossIn("SSIM_32-128", out_ssim[1])
-        # save weight
-        model_all.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo%.5f_END_w.h5'%(epoch, model_all.name, batch_size, loss_out[0], loss_out[1]))
+        # save weight # 之前存過不存了，留給最後
+#        model_all.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo%.5f_END_w.h5'%(epoch, model_all.name, batch_size, loss_out[0], loss_out[1]))
             
         log.SetLogTime("e%2d"%(epoch), mode = "end")
         print('==========epcohs: %d, loss0: %.5f, loss1:, %.5f ======='%(epoch, loss_out[0], loss_out[1]))
@@ -230,14 +240,58 @@ if 8 in INT_FLOW_CONTROL:
     log.SetLogTime("train", mode = "end")
     log.SaveLog2NPY()
 #%% SAVE MODEL 上面存過了
-    model_all.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo%.5f_END_w.h5'%(epoch, model_all.name, batch_size, loss_out[0], loss_out[1]))
+    model_all.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_lo%.5f_END_w.h5'%(epochs, model_all.name, batch_size, loss_out[0], loss_out[1]))
 #model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
 #model2.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model2.name, batch_size, loss2))
 #partModel_2.save(partModel_2.name+'.h5')
 #%% USE
-if 5 in INT_FLOW_CONTROL:
+def PredictPartFig():
     predict_part = model_all.predict(dataloader.dataSet["dataset32_x"][:5,:])
     for _i in range(AMOUNT_OUT):
         print("=="*5)
         show_result_row(predict_part[_i])
     print("=="*5)
+if 5 in INT_FLOW_CONTROL:
+    PredictPartFig()
+#%% 評估 # 
+def ShowAnalysisInfo(ANALYSIS_NPY):
+    from utils_collect import ShowLossAnalysisFigNPY, CalEpochTimeCost
+    print("LOG 分析")
+    ## DATA
+    if not ANALYSIS_NPY:
+        ANALYSIS_NPY = log.logNPY
+        
+    ShowLossAnalysisFigNPY(ANALYSIS_NPY, boolSave = False);
+    print("時間需求")
+    CalEpochTimeCost(ANALYSIS_NPY);
+if 6 in INT_FLOW_CONTROL:
+    ShowAnalysisInfo(ANALYSIS_NPY)
+#%% 評估 - 跑全圖
+def PredictAllFigAndCalLoss():
+    ## 
+    predict_all = model_all.predict(dataloader.dataSet["dataset32_x"])
+    AMOUNT_LOSS = len(predict_all)
+    ## TMP
+    tmp_psnr_all = list()
+    tmp_ssim_all = list()
+    for _i in range(AMOUNT_LOSS):
+        tmp_psnr_all.append(0)
+        tmp_ssim_all.append(0)
+    ## Ten
+    tmp_psnr_all[0], tmp_ssim_all[0] = Cal_PSNR_SSIM(predict_all[0], dataloader.dataSet["dataset64_x"])
+    tmp_psnr_all[1], tmp_ssim_all[1] = Cal_PSNR_SSIM(predict_all[1], dataloader.dataSet["dataset128_x"])
+    ## Cal
+    init_op = tf.global_variables_initializer() # 不知道會不會影響 KERAS????!?!?!??!?! # NEW
+    with tf.Session() as sess:
+        for _l_i in range(AMOUNT_LOSS):
+            sess.run(init_op)
+            out_psnr[_l_i] = sess.run(tmp_psnr_all[_l_i])
+            out_ssim[_l_i] = sess.run(tmp_ssim_all[_l_i])
+    ## Show
+    for _i in range(AMOUNT_LOSS):
+        print("=="*10)
+        show_val_info("PSNR%d"%(_i+1), out_psnr[_i])
+        show_val_info("SSIM%d"%(_i+1), out_ssim[_i])
+    print("=="*10)
+if 9 in INT_FLOW_CONTROL:
+    PredictAllFigAndCalLoss()
