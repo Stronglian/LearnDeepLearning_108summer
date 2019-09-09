@@ -398,7 +398,7 @@ if __name__ == "__main__" and True:
     # Loss 計算 - 設定
     AMOUNT_LOSS_NUM  = 2
     boolSave = False
-    strNPYname = "./result/2Model_e10_b16__continue/log_from2019-09-04 16_16_23.npy"
+    strNPYname = "./result/2Model_e20_b16_e+11/log_from2019-09-08 19_06_06.npy"
 #    LOSS = "LOSS"
     # SHOW
     ShowLossAnalysisFigNPY(strNPYname=strNPYname, AMOUNT_LOSS_NUM=AMOUNT_LOSS_NUM, boolSave=boolSave);
