@@ -51,7 +51,7 @@ model_weight_folder = "./result/Y-struct_e06_b16_e+7/"
 #model_weight_path = None # list
 model_weight_path = ["e19_x32to64to128_model_b16_lo1352.49109_lo432.89719_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
 model_struct = "Y-struct"
-model_discription = "e+7+20_2-8" # 兩種輸出 2-8 比例
+model_discription = "e+7+20_3-8" # 兩種輸出 3-8 比例
 #%% logger 
 if 8 in INT_FLOW_CONTROL:
     saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, epochs, batch_size)
