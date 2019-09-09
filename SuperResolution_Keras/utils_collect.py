@@ -339,7 +339,7 @@ def ShowLossAnalysisFigNPY(strNPYname, boolSave = False, LOSS = "LOSS",
             loss_list = tmp_dictLog[_n_loss].copy()    # 主要資料
             ### show info
             show_val_info(_n_loss, loss_list);
-            ShowValMaxMinFig(x_list, loss_list, _n_loss, 
+            ShowValMaxMinFig(x_list, loss_list, _n_loss,  boolSave = boolSave,
                              boolDictShow = {"val":True, "max":False, "min":True});
         if _i // AMOUNT_LOSS_NUM in [0, 1]: # PSNR、SSIM
             loss_list_list = tmp_dictLog[_n_loss].copy()    # 主要資料
@@ -349,7 +349,7 @@ def ShowLossAnalysisFigNPY(strNPYname, boolSave = False, LOSS = "LOSS",
             loss_list = dict_a[_k]
             ##$# SHOW INFO
             show_val_info("%s(%s)"%(_n_loss,_k), loss_list);
-            ShowValMaxMinFig(x_list, loss_list, "%s(%s)"%(_n_loss, _k), 
+            ShowValMaxMinFig(x_list, loss_list, "%s(%s)"%(_n_loss, _k), boolSave = boolSave,
                              boolDictShow = {"val":True, "max":True, "min":False});
             ### PICK - max、min
             for _k in ["max", "min"]:
