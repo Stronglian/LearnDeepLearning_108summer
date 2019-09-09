@@ -16,9 +16,10 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 
 import os
-from utils_collect import LoadNPY
+#from utils_collect import LoadNPY
+
+from torchsummary import summary # pip install torchsummary
 #%% TEST
-#m.AlexNet # model
 
 #alexnet_features = torchvision.models.alexnet(pretrained=True).features # call model
 #
@@ -32,7 +33,7 @@ https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/02-intermediate
 def conv3x3(in_channels, out_channels, stride=1):
     return nn.Conv2d(in_channels, out_channels, kernel_size=3, 
                      stride=stride, padding=1, bias=False)
-    
+
 class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, downsample=None):
         super(ResidualBlock, self).__init__()
@@ -66,12 +67,12 @@ class Modle_TEST(nn.Module):
         
         
         self.droup1  = nn. Dropout(p=0.5)
-        self.linear1 = nn.Linear(in_features=9216, out_features=4096, bias=True)
+        self.linear1 = nn.Linear(in_features=9216, out_features=4096, bias=True) # If set to ``False``, the layer will not learn an additive bias.
         self.relu1   = nn.ReLU()
         self.droup2  = nn.Dropout(p=0.5)
         self.linear2 = nn.Linear(in_features=4096, out_features=4096, bias=True)
         self.relu2   = nn.ReLU()
-        self.linear3 = nn.Linear(in_features=4096, out_features=1000, bias=True)
+        self.linear3 = nn.Linear(in_features=4096, out_features=3, bias=True)
         
         return
     
@@ -79,12 +80,12 @@ class Modle_TEST(nn.Module):
         data = self.alexnet_features(data)
         data = self.resBlock(data)
         data = self.droup1(data)
-        data = self.linear1(data)
-        data = self.relu1(data)
-        data = self.droup2(data)
-        data = self.linear2(data)
-        data = self.relu2(data)
-        data = self.linear3(data)
+#        data = self.linear1(data)
+#        data = self.relu1(data)
+#        data = self.droup2(data)
+#        data = self.linear2(data)
+#        data = self.relu2(data)
+#        data = self.linear3(data)
         
         return data
 #%%
@@ -117,7 +118,9 @@ class Dataset_TEST(Dataset):
             for _n in os.listdir(strFolderData):
                 self.dataSet[t_key] = np.load(strFolderData+_n) 
         # 
-        self.dataSet[self.t_type]["image"].reshape(len(self.dataSet[self.t_type]["image"]), 224, 224, 3)
+#        print("shape:", self.dataSet[self.t_type]["image"].shape, end = "")
+        self.dataSet[self.t_type]["image"] = self.dataSet[self.t_type]["image"].reshape(len(self.dataSet[self.t_type]["image"]), 3, 224, 224)
+#        print("=>", self.dataSet[self.t_type]["image"].shape)
         return
     
     def __getitem__(self, index):
@@ -131,20 +134,21 @@ class Dataset_TEST(Dataset):
 #    dataImg = np.load(strFolderData+strDataNPY, allow_pickle=True)
 #    return dataImg[:intNum]
 #%%
-#device_tmp = torch.device("cuda" if torch.cuda.is_available else "cpu")
+#device_tmp = torch.device("cuda" if torch.cuda.is_available else "cpu") # 打 _tmp 是為了replace 容易
 device_tmp = torch.device("cpu")
 model_tmp = Modle_TEST()
+summary(model_tmp, (3, 224, 224))#model_tmp.summary()
 #img = LoadImage()
-d_train = Dataset_TEST("train")
-l_train = DataLoader(d_train)
-for img, lab, attr in l_train:
-    
-    img  = img.float().to(device_tmp) / 255.0
-    lab  = img.long().to(device_tmp)
-    attr = img.float().to(device_tmp)
-    
-    model_tmp(img)
-    break
+#d_train = Dataset_TEST("train")
+#l_train = DataLoader(d_train)
+#for img, lab, attr in l_train:
+#    
+#    img_ten  = img.float().to(device_tmp) / 255.0
+#    lab_ten  = img.long().to(device_tmp)
+#    attr_ten = img.float().to(device_tmp)
+#    
+#    model_tmp(img_ten)
+#    break
 #%%
 
 #%%
