@@ -37,10 +37,11 @@ from model_collect import res_block, normalize, denormalize, upsample
 #%% 參數設定 - 
 # train
 epochs = 20
+epochs_shuffle = 1
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
-model_weight_folder = "./result/2Model_e10_b16__continue/"
+model_weight_folder = "./result/2Model_e20_b16_e+11/"
 #model_weight_path = None # list
-model_weight_path = ["e9_x32-x64_model_b16_lo371.58945_END_w.h5", "e9_x64-x128_model_b16_lo726.65582_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
+model_weight_path = ["e19_x32-x64_model_b16_lo372.58713_END_w.h5", "e19_x64-x128_model_b16_lo720.30139_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
 model_struct = "2Model"
 model_discription = "e+11"
 #%% logger 
@@ -128,7 +129,8 @@ log.UpdateProgSetting(itrMax = itr_max,
                       batch_size = batch_size, 
                       epochs = epochs, 
                       model_weight_path = model_weight_path,
-                      model_discription = model_discription)
+                      model_discription = model_discription,
+                      epochs_shuffle = epochs_shuffle)
 # SET
 strShowLoss = "e%02d it%03d %s: 'min' %.3f <- %.3f"
 strModelName_Loss = 'e%d_%s_b%d_lo%.5f_w.h5'
@@ -217,7 +219,7 @@ for epoch in range(epochs):
     log.SetLogTime("e%2d"%(epoch), mode = "end")
     print('==========epcohs: %d, loss1: %.5f, loss3:, %.5f ======='%(epoch, loss1, loss3))
     # epoch 結束後，shuffle
-    if epoch % 1 == 0:
+    if epoch % epochs_shuffle == 0:
         dataloader.ShuffleIndex()
 #%% SAVE MODEL 上面存過了
 #model1.save_weights(saveFolder + 'e%d_%s_b%d_lo%.5f_w.h5'%(epochs, model1.name, batch_size, loss1))
