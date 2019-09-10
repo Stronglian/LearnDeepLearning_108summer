@@ -51,7 +51,7 @@ model_weight_folder = "./result/Y-struct_e20_b16_e+7+20_3-8/"
 #model_weight_path = None # list
 model_weight_path = ["e18_x32to64to128_model_b16_1_P20.05_S0.47733_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
 model_struct = "Y-struct"
-model_discription = "e+7+20_3-8" # 兩種輸出 3-8 比例
+model_discription = "e+7+20+%d_3-8"%(epochs) # 兩種輸出 3-8 比例
 #%% logger 
 if 8 in INT_FLOW_CONTROL:
     saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, epochs, batch_size)
@@ -162,6 +162,7 @@ if 3 in INT_FLOW_CONTROL:
     log.UpdateProgSetting(itrMax = itr_max, 
                           batch_size = batch_size, 
                           epochs = epochs, 
+                          model_weight_folder = model_weight_folder,
                           model_weight_path = model_weight_path,
                           model_discription = model_discription,
                           epochs_shuffle = epochs_shuffle)
