@@ -44,12 +44,14 @@ def show_val_info(strOut, listValue, boolReturnDict = False, boolPrint = True):
     val_len = len(listValue)
     val_max = np.max(listValue)
     val_min = np.min(listValue)
+    val_max_arg = np.argmax(listValue)
+    val_min_arg = np.argmin(listValue)
     val_avg = np.average(listValue)
 #    print(strOut, "len:", len(listValue), "avg:", np.average(listValue), "max:", np.max(listValue), "min:", np.min(listValue))    
     if boolPrint:
-        print("%s: len:%d, avg:%.5f, max:%.2f, min:%.5f"%(strOut, val_len, val_avg, val_max, val_min))
+        print("%s: len:%d, avg:%.5f, max:%.2f, min:%.5f, arg_max:%d, atg_min:%d"%(strOut, val_len, val_avg, val_max, val_min, val_max_arg, val_min_arg))
     if boolReturnDict:
-        return {"len":val_len, "avg":val_avg, "max":val_max, "min":val_min}
+        return {"len":val_len, "avg":val_avg, "max":val_max, "min":val_min, "arg_max":val_max_arg, "arg_mi:":val_min_arg}
 #        return val_len, val_avg, val_max, val_min
 #%%    
 def LoadJSON(nameJSON):#, nameDict):
@@ -394,7 +396,7 @@ def CalEpochTimeCost(strNPYname, boolCalAll = False):
     print("%s avg cost: %.3f sec./epoch"%(_tag, time_cost_avg))
     return time_cost_avg, dictTimeCost
 #%% 2Model # Loss 計算
-if __name__ == "__main__" and True:
+if __name__ == "__main__" and False:
     # Loss 計算 - 設定
     AMOUNT_LOSS_NUM  = 2
     boolSave = False
@@ -404,11 +406,11 @@ if __name__ == "__main__" and True:
     ShowLossAnalysisFigNPY(strNPYname=strNPYname, AMOUNT_LOSS_NUM=AMOUNT_LOSS_NUM, boolSave=boolSave);
     CalEpochTimeCost(strNPYname);
 #%% Y-Mode # Loss 計算
-if __name__ == "__main__" and False:
+if __name__ == "__main__" and True:
     # Loss 計算 - 設定
     AMOUNT_LOSS_NUM  = 2
     boolSave = False
-    strNPYname = './result/Y-struct_e06_b16_e+1/log_from2019-09-05 08_58_26.npy' # log.logNPY
+    strNPYname = './result/Y-struct_e20_b16_e+7+20_3-8/log_from2019-09-09 07_45_34.npy' # log.logNPY
     # SHOW
     ShowLossAnalysisFigNPY(strNPYname=strNPYname, AMOUNT_LOSS_NUM=AMOUNT_LOSS_NUM, boolSave=boolSave);
     CalEpochTimeCost(strNPYname);
