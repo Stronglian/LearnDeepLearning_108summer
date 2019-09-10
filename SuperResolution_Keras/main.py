@@ -47,9 +47,9 @@ DICT_FLOW_NAME = {1:"載入資料庫",
 epochs = 20
 epochs_shuffle = 1
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
-model_weight_folder = "./result/Y-struct_e20_b16_e+7/"
+model_weight_folder = "./result/Y-struct_e20_b16_e+7+20_3-8/"
 #model_weight_path = None # list
-model_weight_path = ["e19_x32to64to128_model_b16_lo1352.49109_lo432.89719_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
+model_weight_path = ["e18_x32to64to128_model_b16_1_P20.05_S0.47733_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
 model_struct = "Y-struct"
 model_discription = "e+7+20_3-8" # 兩種輸出 3-8 比例
 #%% logger 
