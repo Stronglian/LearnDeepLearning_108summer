@@ -49,7 +49,7 @@ def show_val_info(strOut, listValue, boolReturnDict = False, boolPrint = True):
     val_avg = np.average(listValue)
 #    print(strOut, "len:", len(listValue), "avg:", np.average(listValue), "max:", np.max(listValue), "min:", np.min(listValue))    
     if boolPrint:
-        print("%s: len:%d, avg:%.5f, max:%.2f, min:%.5f, arg_max:%d, atg_min:%d"%(strOut, val_len, val_avg, val_max, val_min, val_max_arg, val_min_arg))
+        print("%s: len:%d, avg:%.5f, max:%.2f, min:%.5f, arg_max:%d, arg_min:%d"%(strOut, val_len, val_avg, val_max, val_min, val_max_arg, val_min_arg))
     if boolReturnDict:
         return {"len":val_len, "avg":val_avg, "max":val_max, "min":val_min, "arg_max":val_max_arg, "arg_mi:":val_min_arg}
 #        return val_len, val_avg, val_max, val_min
@@ -362,6 +362,52 @@ def ShowLossAnalysisFigNPY(strNPYname, boolSave = False, LOSS = "LOSS",
                                  boolDictShow = {_k:True});
     return
 
+def ShowLossAnalysisFigNPY2(strNPYname, boolSave = False, LOSS = "LOSS", 
+                           type_list = ["avg", "max", "min"], AMOUNT_LOSS_NUM = 2):
+    """
+    AMOUNT_LOSS_NUM: 有幾個結果
+    簡化成一、兩張圖
+    """
+    ## LOAD NPY
+    if os.path.exists(strNPYname):
+        print("LOAD", strNPYname)
+    else:
+        raise IOError(strNPYname, "not exists")
+    tmp_dictLog = np.load(strNPYname, allow_pickle=True).item()
+    tmp_dictLog = tmp_dictLog[LOSS]
+    print("key:", np.sort(tmp_dictLog.keys()))
+    ## SHOW
+    for _i, _n_loss in enumerate(np.sort(list(tmp_dictLog.keys()))): #
+        print(_i, _n_loss, "==="*20)
+        ### info 
+        loss_amount = len(tmp_dictLog[_n_loss])    # 資料數量
+        x_list = [_j for _j in range(loss_amount)] # 橫軸
+        if _i // AMOUNT_LOSS_NUM == 2: # LOSS
+            print("LOSS"); 
+            loss_list = tmp_dictLog[_n_loss].copy()    # 主要資料
+            ### show info
+            show_val_info(_n_loss, loss_list);
+            ShowValMaxMinFig(x_list, loss_list, _n_loss,  boolSave = boolSave,
+                             boolDictShow = {"val":True, "max":False, "min":True});
+        if _i // AMOUNT_LOSS_NUM in [0, 1]: # PSNR、SSIM
+            loss_list_list = tmp_dictLog[_n_loss].copy()    # 主要資料
+            dict_a = CalValidDict(loss_list_list)
+            ### PICK - avg
+            _k = "avg"
+            loss_list = dict_a[_k]
+            ##$# SHOW INFO
+            show_val_info("%s(%s)"%(_n_loss,_k), loss_list);
+            ShowValMaxMinFig(x_list, loss_list, "%s(%s)"%(_n_loss, _k), boolSave = boolSave,
+                             boolDictShow = {"val":True, "max":True, "min":False});
+            ### PICK - max、min
+#            for _k in ["max", "min"]:
+#                loss_list = dict_a[_k]
+#                ##$# SHOW INFO
+#                show_val_info("%s(%s)"%(_n_loss,_k), loss_list);
+#                ShowValMaxMinFig(x_list, loss_list, "%s(%s)"%(_n_loss, _k), 
+#                                 boolDictShow = {_k:True});
+    return
+
 def CalEpochTimeCost(strNPYname, boolCalAll = False):
     ## LOAD NPY
     if os.path.exists(strNPYname):
@@ -412,5 +458,5 @@ if __name__ == "__main__" and True:
     boolSave = False
     strNPYname = './result/Y-struct_e20_b16_e+7+20_3-8/log_from2019-09-09 07_45_34.npy' # log.logNPY
     # SHOW
-    ShowLossAnalysisFigNPY(strNPYname=strNPYname, AMOUNT_LOSS_NUM=AMOUNT_LOSS_NUM, boolSave=boolSave);
+    ShowLossAnalysisFigNPY2(strNPYname=strNPYname, AMOUNT_LOSS_NUM=AMOUNT_LOSS_NUM, boolSave=boolSave);
     CalEpochTimeCost(strNPYname);
