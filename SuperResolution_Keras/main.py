@@ -47,11 +47,13 @@ DICT_FLOW_NAME = {1:"載入資料庫",
 epochs = 20
 epochs_shuffle = 1
 batch_size = 16 #if 32 : 4G VRAM 不足，16 頂
-model_weight_folder = "./result/Y-struct_e20_b16_e+7+20_3-8/"
+#model_weight_folder = "./result/Y-struct_e20_b16_e+7+20_3-8/"
+#model_weight_path = ["e18_x32to64to128_model_b16_1_P20.05_S0.47733_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
+model_weight_folder = "./result/Y-struct_e20_b16_e+7/"
+model_weight_path = ["e19_x32to64to128_model_b16_lo1352.49109_lo432.89719_END_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
 #model_weight_path = None # list
-model_weight_path = ["e18_x32to64to128_model_b16_1_P20.05_S0.47733_w.h5"] # "e40_x64-x128_model_b16_lo337.87949_w.h5"
 model_struct = "Y-struct"
-model_discription = "e+7+20+%d_3-8"%(epochs) # 兩種輸出 3-8 比例
+model_discription = "e+7+20+%d_8-3"%(epochs) # 兩種輸出 3-8 比例
 #%% logger 
 if 8 in INT_FLOW_CONTROL:
     saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, epochs, batch_size)
@@ -59,7 +61,6 @@ if 8 in INT_FLOW_CONTROL:
         os.makedirs(saveFolder)
     except:
         print("saveFolder", saveFolder, "is exsist.")
-    #dictLossName = 
     log = OWNLogger(logNPY = saveFolder, 
                     lossName=["loss_32-64", "loss_32-128", 
                               "PSNR_32-64", "PSNR_32-128",
@@ -98,7 +99,7 @@ if 2 in INT_FLOW_CONTROL:
     _,    x_128, _        = Model_Block(x_in = m_branch, name_id = "_64-128", name_output = "to128") # 64-128
     
     model_all = Model(input = x_in, output = [x_64, x_128], name = "x32to64to128_model") # warning, 似乎要轉成 tensor 再送給 model
-    model_all.compile(optimizer='adam', loss = ['mse', 'mse'], loss_weights = [0.3, 0.8])
+    model_all.compile(optimizer='adam', loss = ['mse', 'mse'], loss_weights = [0.8, 0.3])
     #model_all = Model(input = x_in, output = {"to64":x_64, "to128":x_128}, name = "x32to64to128")
     #model_all.compile(optimizer='adam', loss = {"to64":'mse', "to128":'mse'})
     
@@ -239,6 +240,7 @@ if 3 in INT_FLOW_CONTROL:
         if epoch % epochs_shuffle == 0:
             dataloader.ShuffleIndex()
 #        break # FRO TESTt
+
 if 8 in INT_FLOW_CONTROL:
     log.SetLogTime("train", mode = "end")
     log.SaveLog2NPY()
@@ -254,6 +256,7 @@ def PredictPartFig():
         print("=="*5)
         show_result_row(predict_part[_i])
     print("=="*5)
+
 if 5 in INT_FLOW_CONTROL:
     PredictPartFig()
 #%% 評估 # 
@@ -267,6 +270,7 @@ def ShowAnalysisInfo(ANALYSIS_NPY):
     ShowLossAnalysisFigNPY(ANALYSIS_NPY, boolSave = False);
     print("時間需求")
     CalEpochTimeCost(ANALYSIS_NPY);
+
 if 6 in INT_FLOW_CONTROL:
     ShowAnalysisInfo(ANALYSIS_NPY)
 #%% 評估 - 跑全圖
@@ -296,5 +300,6 @@ def PredictAllFigAndCalLoss():
         show_val_info("PSNR%d"%(_i+1), out_psnr[_i])
         show_val_info("SSIM%d"%(_i+1), out_ssim[_i])
     print("=="*10)
+
 if 9 in INT_FLOW_CONTROL:
     PredictAllFigAndCalLoss()
