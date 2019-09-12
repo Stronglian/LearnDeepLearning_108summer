@@ -21,9 +21,9 @@ import os
 from torchsummary import summary # pip install torchsummary
 #%% TEST
 
-#alexnet_features = torchvision.models.alexnet(pretrained=True).features # call model
-#
-#print(alexnet_features)
+alexnet_features = torchvision.models.alexnet(pretrained=True)#.features # call model
+
+print(alexnet_features)
 
 #%% RES BLOCK
 """
@@ -65,6 +65,7 @@ class Modle_TEST(nn.Module):
         self.alexnet_features = torchvision.models.alexnet(pretrained=True).features
         self.resBlock = ResidualBlock(in_channels = 256, out_channels = 256)
         
+#        self.avgPool = nn.AdaptiveAvgPool2d(output_size=(6,6)) # TEST
         
         self.droup1  = nn. Dropout(p=0.5)
         self.linear1 = nn.Linear(in_features=9216, out_features=4096, bias=True) # If set to ``False``, the layer will not learn an additive bias.
@@ -72,20 +73,24 @@ class Modle_TEST(nn.Module):
         self.droup2  = nn.Dropout(p=0.5)
         self.linear2 = nn.Linear(in_features=4096, out_features=4096, bias=True)
         self.relu2   = nn.ReLU()
-        self.linear3 = nn.Linear(in_features=4096, out_features=3, bias=True)
+        self.linear3 = nn.Linear(in_features=4096, out_features=15, bias=True)
         
         return
     
     def forward(self, data):
         data = self.alexnet_features(data)
         data = self.resBlock(data)
+#        data = self.avgPool(data) # TEST
         data = self.droup1(data)
-#        data = self.linear1(data)
-#        data = self.relu1(data)
-#        data = self.droup2(data)
-#        data = self.linear2(data)
-#        data = self.relu2(data)
-#        data = self.linear3(data)
+        
+        data = data.view((data.size(0), -1)) # FLATTEN
+        
+        data = self.linear1(data) # dense
+        data = self.relu1(data)
+        data = self.droup2(data)
+        data = self.linear2(data)
+        data = self.relu2(data)
+        data = self.linear3(data)
         
         return data
 #%%
@@ -137,10 +142,12 @@ class Dataset_TEST(Dataset):
 #device_tmp = torch.device("cuda" if torch.cuda.is_available else "cpu") # 打 _tmp 是為了replace 容易
 device_tmp = torch.device("cpu")
 model_tmp = Modle_TEST()
-summary(model_tmp, (3, 224, 224))#model_tmp.summary()
-#img = LoadImage()
+# summary
+summary(model_tmp, (3, 224, 224)) # model_tmp.summary()
+# LOAD
 #d_train = Dataset_TEST("train")
 #l_train = DataLoader(d_train)
+## 
 #for img, lab, attr in l_train:
 #    
 #    img_ten  = img.float().to(device_tmp) / 255.0
@@ -148,7 +155,7 @@ summary(model_tmp, (3, 224, 224))#model_tmp.summary()
 #    attr_ten = img.float().to(device_tmp)
 #    
 #    model_tmp(img_ten)
-#    break
+##    break
 #%%
 
 #%%
