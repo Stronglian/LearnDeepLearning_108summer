@@ -363,7 +363,7 @@ def ShowLossAnalysisFigNPY(strNPYname, boolSave = False, LOSS = "LOSS",
     return
 
 def ShowLossAnalysisFigNPY2(strNPYname, boolSave = False, LOSS = "LOSS", 
-                           type_list = ["avg", "max", "min"], AMOUNT_LOSS_NUM = 2):
+                           type_list = ["avg"], AMOUNT_LOSS_NUM = 2):
     """
     AMOUNT_LOSS_NUM: 有幾個結果
     簡化成一、兩張圖
@@ -399,13 +399,6 @@ def ShowLossAnalysisFigNPY2(strNPYname, boolSave = False, LOSS = "LOSS",
             show_val_info("%s(%s)"%(_n_loss,_k), loss_list);
             ShowValMaxMinFig(x_list, loss_list, "%s(%s)"%(_n_loss, _k), boolSave = boolSave,
                              boolDictShow = {"val":True, "max":True, "min":False});
-            ### PICK - max、min
-#            for _k in ["max", "min"]:
-#                loss_list = dict_a[_k]
-#                ##$# SHOW INFO
-#                show_val_info("%s(%s)"%(_n_loss,_k), loss_list);
-#                ShowValMaxMinFig(x_list, loss_list, "%s(%s)"%(_n_loss, _k), 
-#                                 boolDictShow = {_k:True});
     return
 
 def CalEpochTimeCost(strNPYname, boolCalAll = False):
@@ -442,17 +435,17 @@ def CalEpochTimeCost(strNPYname, boolCalAll = False):
     print("%s avg cost: %.3f sec./epoch"%(_tag, time_cost_avg))
     return time_cost_avg, dictTimeCost
 #%% 2Model # Loss 計算
-if __name__ == "__main__" and False:
+if __name__ == "__main__" and True:
     # Loss 計算 - 設定
     AMOUNT_LOSS_NUM  = 2
     boolSave = False
-    strNPYname = "./result/2Model_e20_b16_e+11/log_from2019-09-08 19_06_06.npy"
+    strNPYname = "./result/%s/%s.npy"%("2Model_e20_b16_e+11+20", "log_from2019-09-10 09_05_06")
 #    LOSS = "LOSS"
     # SHOW
     ShowLossAnalysisFigNPY(strNPYname=strNPYname, AMOUNT_LOSS_NUM=AMOUNT_LOSS_NUM, boolSave=boolSave);
     CalEpochTimeCost(strNPYname);
 #%% Y-Mode # Loss 計算
-if __name__ == "__main__" and True:
+if __name__ == "__main__" and False:
     # Loss 計算 - 設定
     AMOUNT_LOSS_NUM  = 2
     boolSave = False
