@@ -75,3 +75,91 @@ def LoadNPY(nameNPY, shape = None):
 def SaveNPY(nameNPY, nameArr):
     np.save(nameNPY, nameArr)
     return
+#%%
+#%% Time
+"""
+https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/369869/
+https://www.programiz.com/python-programming/time
+"""
+import time
+#import pytz
+#us = pytz.timezone('US/Pacific')
+class OWNLogger:
+    def __init__(self, logNPY = None, lossName = list(), dictSetting = dict()):
+        # Dict
+        self.dictLog = dict()
+        self.dictLog["TIME"] = dict()
+        self.dictLog["LOSS"] = dict()
+        self.dictLog["SET"] = dictSetting
+        if len(lossName) == 0:
+            lossName = ["loss"]
+        for _l in lossName:
+            self.dictLog["LOSS"][_l] = list()
+        # SAVE
+        if logNPY is None:
+            self.logNPY = "./log_from%s.npy"%(self.ShowLocalTime())
+        elif logNPY[-1] == '/':
+            self.logNPY = "%slog_from%s.npy"%(logNPY, self.ShowLocalTime())
+        return
+    
+#    def __del__(self):
+#        self.SaveLog2NPY()
+#        return
+    def UpdateProgSetting(self, **dictSetting):
+        self.dictLog["SET"].update(dictSetting)
+        return
+    # SAVE
+    def SaveLog2NPY(self, boolPrint = False):
+        if boolPrint:
+            print("SaveLog2NPY", self.logNPY)
+        np.save(self.logNPY, self.dictLog)
+        return
+    def LoadLog(self, nameNPY, boolForce = False):
+        self.logNPY = nameNPY
+        if len(list(self.dictLog.keys())) == 0 or boolForce:
+            self.dictLog = np.load(self.logNPY, allow_pickle=True).item()
+        print("LOAD", self.logNPY)
+        return
+    def ShowAllLog(self):
+        print("Dict:", self.logNPY)
+        for _key in list(self.dictLog.keys()):
+            for _key2 in list(self.dictLog[_key].keys()):
+                print(_key, _key2, time.ctime(self.dictLog[_key][_key2]))
+        return
+    # TIME
+    def SetLogTime(self, tag, mode = "start", boolPrint = False):
+        """
+        mode:
+            "start"
+            "end"
+        tag:
+            epoch%d
+            train
+        """
+        if boolPrint:
+            print("=>", tag, mode)
+        self.dictLog["TIME"][tag+"_"+mode] = time.time()
+        if mode == "end":
+            if tag+"_start" not in list(self.dictLog["TIME"].keys()):
+                raise ValueError("%s_start not in LOG"%(tag))
+            print("%s, It cost %.5f sec."%(tag, self.dictLog["TIME"][tag+"_end"] - self.dictLog["TIME"][tag+"_start"]))
+        return
+    def ShowDateTime(self, intput_time_struct, boolPrint = True):
+        if boolPrint:
+            print(time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct))
+        return time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct)
+    def ShowLocalTime(self):
+        return self.ShowDateTime(time.localtime())
+    # LOSS
+    def AppendLossIn(self, lossName = None, lossValue = None):
+        if lossName is None:
+            lossName = "loss"
+        if lossName not in list(self.dictLog["LOSS"].keys()):
+            raise ValueError("%s not in loss list"%(lossName))
+        self.dictLog["LOSS"][lossName].append(lossValue)
+        return
+#    def ShowLineChart(self, lossName):
+#        """折線圖顯示
+#        """
+#        pass
+#%%
