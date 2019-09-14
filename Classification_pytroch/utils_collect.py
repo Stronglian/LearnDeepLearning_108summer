@@ -43,8 +43,18 @@ def show_result_row(img_list, boolSave = False, strName = "tmp", strFolder = "./
     plt.show()
     return
 
-def show_val_info(strOut, listValue):
-    print(strOut, "len:", len(listValue), "avg:", np.average(listValue), "max:", np.max(listValue), "min:", np.min(listValue))
+def show_val_info(strOut, listValue, boolReturnDict = False, boolPrint = True):
+    val_len = len(listValue)
+    val_max = np.max(listValue)
+    val_min = np.min(listValue)
+    val_max_arg = np.argmax(listValue)
+    val_min_arg = np.argmin(listValue)
+    val_avg = np.average(listValue)
+#    print(strOut, "len:", len(listValue), "avg:", np.average(listValue), "max:", np.max(listValue), "min:", np.min(listValue))    
+    if boolPrint:
+        print("%s: len:%d, avg:%.5f, max:%.2f, min:%.5f, arg_max:%d, arg_min:%d"%(strOut, val_len, val_avg, val_max, val_min, val_max_arg, val_min_arg))
+    if boolReturnDict:
+        return {"len":val_len, "avg":val_avg, "max":val_max, "min":val_min, "arg_max":val_max_arg, "arg_mi:":val_min_arg}
     
 #%%
 def LoadJSON(nameJSON):#, nameDict):
@@ -147,7 +157,7 @@ class OWNLogger:
     def ShowDateTime(self, intput_time_struct, boolPrint = True):
         if boolPrint:
             print(time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct))
-        return time.strftime("%Y-%m-%d %H:%M:%S", intput_time_struct)
+        return time.strftime("%Y-%m-%d %H_%M_%S", intput_time_struct)
     def ShowLocalTime(self):
         return self.ShowDateTime(time.localtime())
     # LOSS
@@ -162,4 +172,131 @@ class OWNLogger:
 #        """折線圖顯示
 #        """
 #        pass
+#%% LOSS FIG
+MAX_SHOW_ALL = 2000
+def MakeMaxMinList(loss_list):
+    max_list = []
+    min_list = []
+    max_num = loss_list[0]
+    min_num = loss_list[0]
+    for _l in loss_list:
+        if _l > max_num:
+            max_num = _l
+        if _l < min_num:
+            min_num = _l
+        max_list.append(max_num)
+        min_list.append(min_num)
+    return max_list, min_list
+
+def S_Clip(in_list, max_show = 255, min_show = 0):
+    if max(in_list) > max_show:
+        in_list = np.clip(in_list, min_show, max_show)
+    return in_list
+
+def ShowFig(x_list, input_list, max_show = None, boolClip = True,
+            strShowSaveTitle = "TMP", boolSave = False, strSaveFolder = "./"):
+    if max_show == None:
+        max_show = np.average(input_list)
+    if boolClip:
+        input_list = S_Clip(input_list, max_show)
+    plt.title("%s (limit: %.2f)"%(strShowSaveTitle, max_show))
+    plt.plot(x_list, input_list)#, linewidth=2.5)#, "-o")
+    if boolSave:
+        plt.savefig("%s%s.jpg"%(strSaveFolder, strShowSaveTitle))
+    plt.show()
+    return
+
+def ShowValMaxMinFig(x_list, in_list, strLossName, max_show = None, boolSave = False, 
+                     boolDictShow = {"val":True, "max":False, "min":True}, **darg):
+    ### mack max/min list
+    max_list, min_list = MakeMaxMinList(in_list)
+    ### 顯示 # 需要浮動限制?
+    max_show = max_show if max_show else np.max(in_list)
+    try:
+        if boolDictShow["val"]:
+            ShowFig(x_list, in_list, max_show = max_show, 
+                    strShowSaveTitle = "%s_all"%(strLossName), boolSave = boolSave, **darg)
+    except KeyError:
+        pass
+    try:
+        if boolDictShow["max"]:
+            ShowFig(x_list, max_list,  max_show = max_show, 
+                    strShowSaveTitle = "%s_max"%(strLossName), boolSave = boolSave, **darg)
+    except KeyError:
+        pass
+    try:
+        if boolDictShow["min"]:
+            ShowFig(x_list, min_list,  max_show = max_show, 
+                    strShowSaveTitle = "%s_min"%(strLossName), boolSave = boolSave, **darg)
+    except KeyError:
+        pass
+    return
+
+def ShowLossAnalysisFigNPY_1(strNPYname, boolSave = False, LOSS = "LOSS", 
+                           type_list = ["avg"], AMOUNT_LOSS_NUM = 2):
+    """
+    AMOUNT_LOSS_NUM: 有幾個結果
+    簡化成一、兩張圖
+    """
+    ## LOAD NPY
+    if os.path.exists(strNPYname):
+        print("LOAD", strNPYname)
+    else:
+        raise IOError(strNPYname, "not exists")
+    tmp_dictLog = np.load(strNPYname, allow_pickle=True).item()
+    tmp_dictLog = tmp_dictLog[LOSS] # 只取用需要的
+#    print("key:", tmp_dictLog.keys())
+    ## SHOW
+#    for _i, _n_loss in enumerate(np.sort(list(tmp_dictLog.keys()))): #
+    for _i, _n_loss in enumerate(tmp_dictLog.keys()): #
+        print(_i, _n_loss, "==="*20)
+        ### info 
+        loss_amount = len(tmp_dictLog[_n_loss])    # 資料數量
+        x_list = [_j for _j in range(loss_amount)] # 橫軸
+        if _i // AMOUNT_LOSS_NUM == 2 or True: # LOSS
+            print("LOSS"); 
+            loss_list = tmp_dictLog[_n_loss].copy()    # 主要資料
+            ### show info
+            show_val_info(_n_loss, loss_list);
+            ShowValMaxMinFig(x_list, loss_list, _n_loss,  boolSave = boolSave,
+                             boolDictShow = {"val":True, "max":False, "min":True});
+    return
+
+def CalEpochTimeCost(strNPYname, boolCalAll = False):
+    ## LOAD NPY
+    if os.path.exists(strNPYname):
+        print("LOAD", strNPYname)
+    else:
+        raise IOError(strNPYname, "not exists")
+    tmp_dictLog = np.load(strNPYname, allow_pickle=True).item()
+    ## PICK
+    tmp_dictLog = tmp_dictLog["TIME"]
+    tmp_dictLog_key = list(tmp_dictLog.keys())
+#    print("key:", tmp_dictLog.keys())
+    tag_list = np.unique([_t.rsplit("_", 1)[0] for _t in tmp_dictLog_key])
+#    print("tag_list:", tag_list)
+    ## CAL DIFF
+    dictTimeCost = {"Epoch":[], "Valid":[], "Total":0}
+    for _tag in tag_list:
+        if (("train" in _tag) or ("Valid" in _tag)) and not boolCalAll:
+            continue
+        se_list = [_t for _t in tmp_dictLog_key if _tag in _t]
+        time_s = [_se for _se in se_list if "start" in _se]
+        time_e = [_se for _se in se_list if "end"   in _se]
+        time_cost = np.round(tmp_dictLog[time_e[0]] - tmp_dictLog[time_s[0]], 5)
+#        print("%s cost: %.3f"%(_tag, time_cost))
+        if "Valid" in _tag:
+            dictTimeCost["Valid"].append(time_cost)
+        elif "train" in _tag:
+            dictTimeCost["Total"] = time_cost
+        else: # epoch
+            dictTimeCost["Epoch"].append(time_cost)
+    ## CAL AVG
+    time_cost_avg = np.average(dictTimeCost["Epoch"])
+    print("%s avg cost: %.3f sec./epoch"%(_tag, time_cost_avg))
+    return time_cost_avg, dictTimeCost
 #%%
+if __name__ == "__main__":
+    logNPY = "./log_from2019-09-15 00_55_24.npy"
+    ShowLossAnalysisFigNPY_1(logNPY);
+    CalEpochTimeCost(logNPY);
