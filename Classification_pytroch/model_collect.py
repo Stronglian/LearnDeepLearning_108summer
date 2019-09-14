@@ -15,15 +15,15 @@ import numpy as np
 
 from torch.utils.data import Dataset, DataLoader
 
-import os
+import os, tqdm
 #from utils_collect import LoadNPY
 
 from torchsummary import summary # pip install torchsummary
 #%% TEST
 
-alexnet_features = torchvision.models.alexnet(pretrained=True)#.features # call model
-
-print(alexnet_features)
+#alexnet_features = torchvision.models.alexnet(pretrained=True)#.features # call model
+#
+#print(alexnet_features)
 
 #%% RES BLOCK
 """
@@ -59,13 +59,19 @@ class ResidualBlock(nn.Module):
 
 #%%
 class Modle_TEST(nn.Module):
-    def __init__(self):
+    def __init__(self, num_resBlock=1, num_classes=15):
+        """
+        num_resBlock 沒作用? 還是無法被顯示?
+        """
         super(Modle_TEST, self).__init__()
         # 網路
         self.alexnet_features = torchvision.models.alexnet(pretrained=True).features
-        self.resBlock = ResidualBlock(in_channels = 256, out_channels = 256)
         
-#        self.avgPool = nn.AdaptiveAvgPool2d(output_size=(6,6)) # TEST
+        self.resBlock = ResidualBlock(in_channels = 256, out_channels = 256)
+#        self.num_resBlock = num_resBlock
+#        self.resBlock = list()
+#        for _i in range(self.num_resBlock):
+#            self.resBlock.append(ResidualBlock(in_channels = 256, out_channels = 256))
         
         self.droup1  = nn. Dropout(p=0.5)
         self.linear1 = nn.Linear(in_features=9216, out_features=4096, bias=True) # If set to ``False``, the layer will not learn an additive bias.
@@ -73,16 +79,20 @@ class Modle_TEST(nn.Module):
         self.droup2  = nn.Dropout(p=0.5)
         self.linear2 = nn.Linear(in_features=4096, out_features=4096, bias=True)
         self.relu2   = nn.ReLU()
-        self.linear3 = nn.Linear(in_features=4096, out_features=15, bias=True)
+        self.linear3 = nn.Linear(in_features=4096, out_features=num_classes, bias=True)
         
         return
     
-    def forward(self, data):
-        data = self.alexnet_features(data)
+    def forward(self, x):
+        data = self.alexnet_features(x)
+        
         data = self.resBlock(data)
-#        data = self.avgPool(data) # TEST
+#        for _i in range(self.num_resBlock):
+#            data = self.resBlock[_i](data)
+            
         data = self.droup1(data)
         
+#        data = data.view((len(data), -1)) # FLATTEN
         data = data.view((data.size(0), -1)) # FLATTEN
         
         data = self.linear1(data) # dense
@@ -139,23 +149,56 @@ class Dataset_TEST(Dataset):
 #    dataImg = np.load(strFolderData+strDataNPY, allow_pickle=True)
 #    return dataImg[:intNum]
 #%%
-#device_tmp = torch.device("cuda" if torch.cuda.is_available else "cpu") # 打 _tmp 是為了replace 容易
-device_tmp = torch.device("cpu")
-model_tmp = Modle_TEST()
-# summary
-summary(model_tmp, (3, 224, 224)) # model_tmp.summary()
-# LOAD
-#d_train = Dataset_TEST("train")
-#l_train = DataLoader(d_train)
-## 
-#for img, lab, attr in l_train:
-#    
-#    img_ten  = img.float().to(device_tmp) / 255.0
-#    lab_ten  = img.long().to(device_tmp)
-#    attr_ten = img.float().to(device_tmp)
-#    
-#    model_tmp(img_ten)
-##    break
+if __name__ == "__main__":
+    batch_size = 8
+    hidden_size = 500
+    num_classes = 15
+    num_epochs = 5
+    batch_size = 8
+    learning_rate = 0.001
+    
+    processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
+#    processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device_tmp = torch.device(processUnit)
+#    if torch.cuda.is_available() and False:
+#        torch.set_default_tensor_type('torch.cuda.FloatTensor')
+#    else:
+#        torch.set_default_tensor_type('torch.FloatTensor')
+        
+#%%
+    model_tmp = Modle_TEST(num_classes=num_classes, num_resBlock=5).to(device_tmp)
+    # summary
+    summary(model_tmp, input_size=(3, 224, 224), device=processUnit) 
+#%%
+    # LOAD
+    d_train = Dataset_TEST("train")
+    l_train = DataLoader(dataset=d_train, 
+                         batch_size=batch_size, 
+                         shuffle=True)
+    # Loss and optimizer
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model_tmp.parameters(), lr=learning_rate)  
+#%%
+    # 
+    total_step = len(l_train)
+    for epoch in range(num_epochs):
+        for _i, (img, lab, attr) in enumerate(l_train):
+            img_ten  = (img/ 255.0).float().to(device_tmp) 
+            lab_ten  = lab.long().to(device_tmp)
+            attr_ten = attr.float().to(device_tmp)
+            # Forward pass
+            outputs = model_tmp(img_ten)
+            loss = criterion(outputs, lab_ten)
+            
+            # Backward and optimize
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+            if (_i+1) % 100 == 0:
+                print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}' 
+                       .format(epoch+1, num_epochs, _i+1, total_step, loss.item()))
+            break
 #%%
 
 #%%
