@@ -20,7 +20,7 @@ import os, tqdm
 
 from torchsummary import summary # pip install torchsummary
 #%% TEST
-
+#
 #alexnet_features = torchvision.models.alexnet(pretrained=True)#.features # call model
 #
 #print(alexnet_features)
@@ -73,13 +73,35 @@ class Modle_TEST(nn.Module):
 #        for _i in range(self.num_resBlock):
 #            self.resBlock.append(ResidualBlock(in_channels = 256, out_channels = 256))
         
-        self.droup1  = nn. Dropout(p=0.5)
-        self.linear1 = nn.Linear(in_features=9216, out_features=4096, bias=True) # If set to ``False``, the layer will not learn an additive bias.
-        self.relu1   = nn.ReLU()
-        self.droup2  = nn.Dropout(p=0.5)
-        self.linear2 = nn.Linear(in_features=4096, out_features=4096, bias=True)
-        self.relu2   = nn.ReLU()
-        self.linear3 = nn.Linear(in_features=4096, out_features=num_classes, bias=True)
+#        self.droup1  = nn. Dropout(p=0.5)
+#        self.linear1 = nn.Linear(in_features=9216, out_features=4096, bias=True) # If set to ``False``, the layer will not learn an additive bias.
+#        self.relu1   = nn.ReLU()
+#        
+#        self.droup2  = nn.Dropout(p=0.5)
+#        self.linear2 = nn.Linear(in_features=4096, out_features=4096, bias=True)
+#        self.relu2   = nn.ReLU()
+#        
+#        self.droup3  = nn.Dropout(p=0.5)
+#        self.linear3 = nn.Linear(in_features=4096, out_features=4096, bias=True)
+#        self.relu3   = nn.ReLU()
+#        
+#        self.linear4 = nn.Linear(in_features=4096, out_features=num_classes, bias=True)
+        
+        self.classifier = nn.Sequential(
+            nn.Dropout(p=0.8),
+            nn.Linear(256 * 6 * 6, 4096), # 9216
+            nn.ReLU(inplace=True),
+            
+            nn.Dropout(p=0.5),
+            nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True),
+            
+            nn.Dropout(p=0.5),
+            nn.Linear(4096, 2048),
+            nn.ReLU(inplace=True),
+            
+            nn.Linear(2048, num_classes),
+        )
         
         return
     
@@ -90,17 +112,21 @@ class Modle_TEST(nn.Module):
 #        for _i in range(self.num_resBlock):
 #            data = self.resBlock[_i](data)
             
-        data = self.droup1(data)
         
 #        data = data.view((len(data), -1)) # FLATTEN
         data = data.view((data.size(0), -1)) # FLATTEN
         
-        data = self.linear1(data) # dense
-        data = self.relu1(data)
-        data = self.droup2(data)
-        data = self.linear2(data)
-        data = self.relu2(data)
-        data = self.linear3(data)
+#        data = self.droup1(data)
+#        data = self.linear1(data) # dense
+#        data = self.relu1(data)
+#        
+#        data = self.droup2(data)
+#        data = self.linear2(data)
+#        data = self.relu2(data)
+#        
+#        data = self.linear3(data)
+        
+        data = self.classifier(data)
         
         return data
 #%%
@@ -199,10 +225,3 @@ if __name__ == "__main__":
                 print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}' 
                        .format(epoch+1, num_epochs, _i+1, total_step, loss.item()))
             break
-#%%
-
-#%%
-#import torch.optim as optim
-#SGD_optimizer = optim.SGD(your_model.parameters(), lr = lr, momentum = 0.9, weight_decay = 1e-4)
-
-#m.forward(img)
