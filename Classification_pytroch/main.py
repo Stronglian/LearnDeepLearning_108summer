@@ -20,11 +20,11 @@ batch_size = 8
 hidden_size = 500
 num_classes = 10
 num_epochs = 5
-batch_size = 8
+batch_size = 8 # 8:3.6GB,
 learning_rate = 0.001
 
-processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
-#processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
+#processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
+processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
 device_tmp = torch.device(processUnit)
 
 #%%

@@ -157,8 +157,8 @@ if __name__ == "__main__":
     batch_size = 8
     learning_rate = 0.001
     
-    processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
-#    processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
+#    processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
+    processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
     device_tmp = torch.device(processUnit)
 #    if torch.cuda.is_available() and False:
 #        torch.set_default_tensor_type('torch.cuda.FloatTensor')
