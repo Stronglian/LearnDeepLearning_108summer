@@ -193,13 +193,14 @@ def S_Clip(in_list, max_show = 255, min_show = 0):
         in_list = np.clip(in_list, min_show, max_show)
     return in_list
 
-def ShowFig(x_list, input_list, max_show = None, boolClip = True,
+def ShowFig(x_list, input_list, max_show = None, boolClip = True, x_sub=10,
             strShowSaveTitle = "TMP", boolSave = False, strSaveFolder = "./"):
     if max_show == None:
         max_show = np.average(input_list)
     if boolClip:
         input_list = S_Clip(input_list, max_show)
     plt.title("%s (limit: %.2f)"%(strShowSaveTitle, max_show))
+    plt.xticks(np.arange(0, len(x_list)+1, x_sub))
     plt.plot(x_list, input_list)#, linewidth=2.5)#, "-o")
     if boolSave:
         plt.savefig("%s%s.jpg"%(strSaveFolder, strShowSaveTitle))
@@ -244,7 +245,7 @@ def ShowValMaxMinFig(x_list, in_list, strLossName, max_show = None, boolSave = F
     return
 
 def ShowLossAnalysisFigNPY_1(strNPYname, boolSave = False, LOSS = "LOSS", 
-                           type_list = ["avg"], AMOUNT_LOSS_NUM = 2, **darg):
+                           type_list = ["avg"], **darg):
     """
     AMOUNT_LOSS_NUM: 有幾個結果
     簡化成一、兩張圖
@@ -264,14 +265,14 @@ def ShowLossAnalysisFigNPY_1(strNPYname, boolSave = False, LOSS = "LOSS",
         ### info 
         loss_amount = len(tmp_dictLog[_n_loss])    # 資料數量
         x_list = [_j for _j in range(loss_amount)] # 橫軸
-        if _i // AMOUNT_LOSS_NUM == 2 or True: # LOSS
-            print("LOSS"); 
-            loss_list = tmp_dictLog[_n_loss].copy()    # 主要資料
-            ### show info
-            show_val_info(_n_loss, loss_list);
-            ShowValMaxMinFig(x_list, loss_list, _n_loss,  boolSave = boolSave,
-                             boolDictShow = {"val":True, "max":False, "min":True},
-                             **darg);
+#        if _i // AMOUNT_LOSS_NUM == 2 or True: # LOSS
+        print("LOSS"); 
+        loss_list = tmp_dictLog[_n_loss].copy()    # 主要資料
+        ### show info
+        show_val_info(_n_loss, loss_list);
+        ShowValMaxMinFig(x_list, loss_list, _n_loss,  boolSave = boolSave,
+                         boolDictShow = {"val":True, "max":False, "min":True},
+                         **darg);
     return
 
 def CalEpochTimeCost(strNPYname, boolCalAll = False):
@@ -310,5 +311,5 @@ def CalEpochTimeCost(strNPYname, boolCalAll = False):
 #%%
 if __name__ == "__main__":
     logNPY = "./result/struct1_e350_b16_b16_e350/log_from2019-09-14 17_56_46.npy"
-    ShowLossAnalysisFigNPY_1(logNPY, max_show = "avg");
+    ShowLossAnalysisFigNPY_1(logNPY, max_show = "avg", x_sub=50);
     CalEpochTimeCost(logNPY);
