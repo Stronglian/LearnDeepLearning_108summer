@@ -19,23 +19,25 @@ from utils_collect import OWNLogger
 import numpy as np
 #%%
 batch_size = 8
-num_epochs = 0 # 0 for TEST
+num_epochs = 350 # 0 for TEST
 #num_classes = 15
 batch_size = 16 # 8:3.6GB,
 learning_rate = 0.001
 
-model_weight_folder = "./result/struct1_e350_b16_b16_e350/"
-model_weight_path = "model_b16_e350.ckpt" # list
-model_struct = "struct1"
-model_discription = "b%d_e%d"%(batch_size, num_epochs) # 兩種輸出 3-8 比例
+#model_weight_folder = "./result/struct1_e350_b16_b16_e350/"
+#model_weight_path = "model_b16_e350.ckpt"
+model_weight_folder = None
+model_weight_path   = None
+model_struct        = "struct2"
+model_discription   = "b%d_e%d"%(batch_size, num_epochs) # 兩種輸出 3-8 比例
 
-processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
-#processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
+#processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
+processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
 device_tmp = torch.device(processUnit)
 
 #%% logger
-#saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, num_epochs, batch_size)
-saveFolder = "./" # for TEST
+saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, num_epochs, batch_size)
+#saveFolder = "./" # for TEST
 if not os.path.exists(saveFolder):
     os.makedirs(saveFolder)
 log = OWNLogger(logNPY=saveFolder,
