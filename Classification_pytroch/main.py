@@ -19,23 +19,23 @@ from utils_collect import OWNLogger
 import numpy as np
 #%%
 batch_size = 8
-num_epochs = 350
+num_epochs = 0 # 0 for TEST
 #num_classes = 15
 batch_size = 16 # 8:3.6GB,
 learning_rate = 0.001
 
-model_weight_folder = None
-model_weight_path = None # list
+model_weight_folder = "./result/struct1_e350_b16_b16_e350/"
+model_weight_path = "model_b16_e350.ckpt" # list
 model_struct = "struct1"
 model_discription = "b%d_e%d"%(batch_size, num_epochs) # 兩種輸出 3-8 比例
 
-#processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
-processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
+processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
+#processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
 device_tmp = torch.device(processUnit)
 
 #%% logger
-saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, num_epochs, batch_size)
-#saveFolder = "./" # for TEST
+#saveFolder = "./result/{0}_e{2:0>2d}_b{3}_{1}/".format(model_struct, model_discription, num_epochs, batch_size)
+saveFolder = "./" # for TEST
 if not os.path.exists(saveFolder):
     os.makedirs(saveFolder)
 log = OWNLogger(logNPY=saveFolder,
@@ -58,8 +58,11 @@ model_main = Modle_TEST(num_resBlock=1).to(device_tmp)
 summary(model_main, input_size=(3, 224, 224), device=processUnit) 
 # https://pytorch.org/tutorials/beginner/saving_loading_models.html
 if model_weight_folder:
-    model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path))
-#    model.eval()
+#    if processUnit == "cpu":
+    model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path,
+                                          map_location='cpu' if processUnit == "cpu" else None))
+#    else:
+#        model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path))
 #%%
 # LOG
 log.ShowLocalTime()
@@ -109,7 +112,7 @@ log.SetLogTime("train", mode = "end")
 log.SaveLog2NPY(boolPrint=True)
 #%% Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
-with torch.no_grad():
+with torch.no_grad(): # model_main.eval() # 似乎同意義?
     correct = 0
     total = 0
     for images, labels, attributes in l_test:
@@ -122,11 +125,12 @@ with torch.no_grad():
         total += lab_ten.size(0)
         correct += (predicted == lab_ten).sum().item()
 
-    print('Accuracy of the network on the 10000 test images: {} %'.format(100 * correct / total))
+    print('Accuracy of the network on the {} test images: {} %'.format(len(d_test), 100 * correct / total))
 
 # Save the model checkpoint
 torch.save(model_main.state_dict(), '%smodel_%s.ckpt'%(saveFolder, model_discription))
 #%% 分析
-from utils_collect import ShowLossAnalysisFigNPY_1, CalEpochTimeCost
-ShowLossAnalysisFigNPY_1(log.logNPY);
-CalEpochTimeCost(log.logNPY);
+if num_epochs != 0:
+    from utils_collect import ShowLossAnalysisFigNPY_1, CalEpochTimeCost
+    ShowLossAnalysisFigNPY_1(log.logNPY);
+    CalEpochTimeCost(log.logNPY);
