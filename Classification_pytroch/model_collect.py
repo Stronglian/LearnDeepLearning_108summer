@@ -18,10 +18,10 @@ from torch.nn import functional as F
 from torch.utils.data import Dataset, DataLoader
 from torchsummary import summary # pip install torchsummary
 #%% TEST
+
+#model_features = torchvision.models.vgg16_bn(pretrained=True)#.features # call model
 #
-#alexnet_features = torchvision.models.alexnet(pretrained=True)#.features # call model
-#
-#print(alexnet_features)
+#print(model_features)
 
 #%% RES BLOCK
 """
@@ -63,7 +63,8 @@ class Modle_TEST(nn.Module):
         """
         super(Modle_TEST, self).__init__()
         # 網路
-        self.alexnet_features = torchvision.models.alexnet(pretrained=True).features
+#        self.alexnet_features = torchvision.models.alexnet(pretrained=True).features
+        self.vgg16_features = torchvision.models.vgg16(pretrained=True).features
         
         self.resBlock = ResidualBlock(in_channels = 256, out_channels = 256)
 #        self.num_resBlock = num_resBlock
@@ -104,7 +105,7 @@ class Modle_TEST(nn.Module):
         return
     
     def forward(self, x):
-        data = self.alexnet_features(x)
+        data = self.vgg16_features(x)  # struct 2 VGG
         
         data = self.resBlock(data)
 #        for _i in range(self.num_resBlock):
@@ -126,8 +127,8 @@ class Modle_TEST(nn.Module):
         
         data = self.classifier(data)
         
-#        return data
-        return F.softmax(data, dim = 1)
+#        return data # struct 1
+        return F.softmax(data, dim = 1) # struct 2
 #%%
 class Dataset_TEST(Dataset):
     def __init__(self, t_type, strFolderData = "../_DataSet/forP/"):

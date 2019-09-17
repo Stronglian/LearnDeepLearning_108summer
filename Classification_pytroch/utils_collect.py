@@ -310,6 +310,6 @@ def CalEpochTimeCost(strNPYname, boolCalAll = False):
     return time_cost_avg, dictTimeCost
 #%%
 if __name__ == "__main__":
-    logNPY = "./result/struct1_e350_b16_b16_e350/log_from2019-09-14 17_56_46.npy"
-    ShowLossAnalysisFigNPY_1(logNPY, max_show = "avg", x_sub=50);
+    logNPY = "./result/struct2_e350_b16_b16_e350/log_from2019-09-17 07_46_26.npy"
+    ShowLossAnalysisFigNPY_1(logNPY, max_show = "max", x_sub=50);
     CalEpochTimeCost(logNPY);

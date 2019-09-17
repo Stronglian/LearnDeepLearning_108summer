@@ -18,7 +18,6 @@ from model_collect import Modle_TEST, Dataset_TEST
 from utils_collect import OWNLogger
 import numpy as np
 #%%
-batch_size = 8
 num_epochs = 350 # 0 for TEST
 #num_classes = 15
 batch_size = 16 # 8:3.6GB,
@@ -28,7 +27,7 @@ learning_rate = 0.001
 #model_weight_path = "model_b16_e350.ckpt"
 model_weight_folder = None
 model_weight_path   = None
-model_struct        = "struct2"
+model_struct        = "struct2_VGG16"
 model_discription   = "b%d_e%d"%(batch_size, num_epochs) # 兩種輸出 3-8 比例
 
 #processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
