@@ -7,18 +7,15 @@ https://pytorch.org/docs/stable/torchvision/models.html
 https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html
 """
 #import torchvision.models as m
+import os
+import numpy as np
 import torch
+import torchvision
 import torch.nn as nn
 from torch.nn import functional as F
-import torchvision
-import torchvision.transforms as transforms
-import numpy as np
+#import torchvision.transforms as transforms
 
 from torch.utils.data import Dataset, DataLoader
-
-import os, tqdm
-#from utils_collect import LoadNPY
-
 from torchsummary import summary # pip install torchsummary
 #%% TEST
 #
