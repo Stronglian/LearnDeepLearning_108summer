@@ -9,6 +9,7 @@ https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.ht
 #import torchvision.models as m
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np
@@ -128,7 +129,8 @@ class Modle_TEST(nn.Module):
         
         data = self.classifier(data)
         
-        return data
+#        return data
+        return F.softmax(data, dim = 1)
 #%%
 class Dataset_TEST(Dataset):
     def __init__(self, t_type, strFolderData = "../_DataSet/forP/"):
