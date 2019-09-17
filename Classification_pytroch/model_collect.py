@@ -19,7 +19,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchsummary import summary # pip install torchsummary
 #%% TEST
 
-#model_features = torchvision.models.vgg16_bn(pretrained=True)#.features # call model
+#model_features = torchvision.models.alexnet(pretrained=True)#.features # call model
 #
 #print(model_features)
 
@@ -63,8 +63,8 @@ class Modle_TEST(nn.Module):
         """
         super(Modle_TEST, self).__init__()
         # 網路
-#        self.alexnet_features = torchvision.models.alexnet(pretrained=True).features
-        self.vgg16_features = torchvision.models.vgg16(pretrained=True).features
+        self.alexnet_features = torchvision.models.alexnet(pretrained=True).features
+#        self.vgg16_features = torchvision.models.vgg19(pretrained=True).features
         
         self.resBlock = ResidualBlock(in_channels = 256, out_channels = 256)
 #        self.num_resBlock = num_resBlock
@@ -72,19 +72,19 @@ class Modle_TEST(nn.Module):
 #        for _i in range(self.num_resBlock):
 #            self.resBlock.append(ResidualBlock(in_channels = 256, out_channels = 256))
         
-#        self.droup1  = nn. Dropout(p=0.5)
-#        self.linear1 = nn.Linear(in_features=9216, out_features=4096, bias=True) # If set to ``False``, the layer will not learn an additive bias.
-#        self.relu1   = nn.ReLU()
-#        
-#        self.droup2  = nn.Dropout(p=0.5)
-#        self.linear2 = nn.Linear(in_features=4096, out_features=4096, bias=True)
-#        self.relu2   = nn.ReLU()
-#        
-#        self.droup3  = nn.Dropout(p=0.5)
-#        self.linear3 = nn.Linear(in_features=4096, out_features=4096, bias=True)
-#        self.relu3   = nn.ReLU()
-#        
-#        self.linear4 = nn.Linear(in_features=4096, out_features=num_classes, bias=True)
+        self.droup1  = nn. Dropout(p=0.5)
+        self.linear1 = nn.Linear(in_features=9216, out_features=4096, bias=True) # If set to ``False``, the layer will not learn an additive bias.
+        self.relu1   = nn.ReLU()
+        
+        self.droup2  = nn.Dropout(p=0.5)
+        self.linear2 = nn.Linear(in_features=4096, out_features=4096, bias=True)
+        self.relu2   = nn.ReLU()
+        
+        self.droup3  = nn.Dropout(p=0.5)
+        self.linear3 = nn.Linear(in_features=4096, out_features=2048, bias=True)
+        self.relu3   = nn.ReLU()
+        
+        self.linear4 = nn.Linear(in_features=2048, out_features=num_classes, bias=True)
         
         self.classifier = nn.Sequential(
             nn.Dropout(p=0.8),
@@ -106,26 +106,34 @@ class Modle_TEST(nn.Module):
     
     def forward(self, x):
         data = self.vgg16_features(x)  # struct 2 VGG
+        print("vgg16_features =>", data.size(), flush=True)
         
         data = self.resBlock(data)
+        print("resBlock =>", data.size(), flush=True)
 #        for _i in range(self.num_resBlock):
 #            data = self.resBlock[_i](data)
             
         
 #        data = data.view((len(data), -1)) # FLATTEN
         data = data.view((data.size(0), -1)) # FLATTEN
+        print("view =>", data.size(), flush=True)
         
-#        data = self.droup1(data)
-#        data = self.linear1(data) # dense
-#        data = self.relu1(data)
-#        
-#        data = self.droup2(data)
-#        data = self.linear2(data)
-#        data = self.relu2(data)
-#        
-#        data = self.linear3(data)
+        data = self.droup1(data)
+        data = self.linear1(data) # dense
+        data = self.relu1(data)
         
-        data = self.classifier(data)
+        data = self.droup2(data)
+        data = self.linear2(data)
+        data = self.relu2(data)
+        
+        data = self.droup3(data)
+        data = self.linear3(data)
+        data = self.relu3(data)
+        
+        data = self.linear4(data)
+        
+#        data = self.classifier(data)
+        print("classifier =>", data.size(), flush=True)
         
 #        return data # struct 1
         return F.softmax(data, dim = 1) # struct 2
@@ -176,15 +184,14 @@ class Dataset_TEST(Dataset):
 #    return dataImg[:intNum]
 #%%
 if __name__ == "__main__":
-    batch_size = 8
     hidden_size = 500
     num_classes = 15
     num_epochs = 5
     batch_size = 8
     learning_rate = 0.001
     
-#    processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
-    processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
+    processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
+#    processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
     device_tmp = torch.device(processUnit)
 #    if torch.cuda.is_available() and False:
 #        torch.set_default_tensor_type('torch.cuda.FloatTensor')
@@ -200,28 +207,15 @@ if __name__ == "__main__":
     d_train = Dataset_TEST("train")
     l_train = DataLoader(dataset=d_train, 
                          batch_size=batch_size, 
-                         shuffle=True)
-    # Loss and optimizer
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model_tmp.parameters(), lr=learning_rate)  
+                         shuffle=True) 
 #%%
     # 
     total_step = len(l_train)
     for epoch in range(num_epochs):
         for _i, (img, lab, attr) in enumerate(l_train):
             img_ten  = (img/ 255.0).float().to(device_tmp) 
-            lab_ten  = lab.long().to(device_tmp)
-            attr_ten = attr.float().to(device_tmp)
+#            lab_ten  = lab.long().to(device_tmp)
+#            attr_ten = attr.float().to(device_tmp)
             # Forward pass
             outputs = model_tmp(img_ten)
-            loss = criterion(outputs, lab_ten)
-            
-            # Backward and optimize
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            
-            if (_i+1) % 100 == 0:
-                print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}' 
-                       .format(epoch+1, num_epochs, _i+1, total_step, loss.item()))
-            break
+ 
