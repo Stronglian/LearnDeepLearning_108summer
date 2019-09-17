@@ -10,3 +10,4 @@ SuperResolution_Keras/doc/*
 dataset_for_torch.zip
 dataset_for_keras.zip
 SuperResolution_Keras/result/ALL_*
+*.ckpt
