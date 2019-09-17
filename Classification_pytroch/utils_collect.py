@@ -211,29 +211,40 @@ def ShowValMaxMinFig(x_list, in_list, strLossName, max_show = None, boolSave = F
     ### mack max/min list
     max_list, min_list = MakeMaxMinList(in_list)
     ### 顯示 # 需要浮動限制?
-    max_show = max_show if max_show else np.max(in_list)
+    if max_show:
+        if max_show == "max":
+            max_show = np.max(in_list)
+        elif max_show == "avg":
+            max_show = np.average(in_list)
+        else:
+            raise ValueError("TESTING")
+    else:
+        max_show = np.max(in_list)
     try:
         if boolDictShow["val"]:
             ShowFig(x_list, in_list, max_show = max_show, 
                     strShowSaveTitle = "%s_all"%(strLossName), boolSave = boolSave, **darg)
     except KeyError:
         pass
+    
     try:
         if boolDictShow["max"]:
             ShowFig(x_list, max_list,  max_show = max_show, 
                     strShowSaveTitle = "%s_max"%(strLossName), boolSave = boolSave, **darg)
     except KeyError:
         pass
+    
     try:
         if boolDictShow["min"]:
-            ShowFig(x_list, min_list,  max_show = max_show, 
+            ShowFig(x_list, min_list, max_show = max_show, 
                     strShowSaveTitle = "%s_min"%(strLossName), boolSave = boolSave, **darg)
     except KeyError:
         pass
+    
     return
 
 def ShowLossAnalysisFigNPY_1(strNPYname, boolSave = False, LOSS = "LOSS", 
-                           type_list = ["avg"], AMOUNT_LOSS_NUM = 2):
+                           type_list = ["avg"], AMOUNT_LOSS_NUM = 2, **darg):
     """
     AMOUNT_LOSS_NUM: 有幾個結果
     簡化成一、兩張圖
@@ -259,7 +270,8 @@ def ShowLossAnalysisFigNPY_1(strNPYname, boolSave = False, LOSS = "LOSS",
             ### show info
             show_val_info(_n_loss, loss_list);
             ShowValMaxMinFig(x_list, loss_list, _n_loss,  boolSave = boolSave,
-                             boolDictShow = {"val":True, "max":False, "min":True});
+                             boolDictShow = {"val":True, "max":False, "min":True},
+                             **darg);
     return
 
 def CalEpochTimeCost(strNPYname, boolCalAll = False):
@@ -297,6 +309,6 @@ def CalEpochTimeCost(strNPYname, boolCalAll = False):
     return time_cost_avg, dictTimeCost
 #%%
 if __name__ == "__main__":
-    logNPY = "./log_from2019-09-15 00_55_24.npy"
-    ShowLossAnalysisFigNPY_1(logNPY);
+    logNPY = "./result/struct1_e350_b16_b16_e350/log_from2019-09-14 17_56_46.npy"
+    ShowLossAnalysisFigNPY_1(logNPY, max_show = "avg");
     CalEpochTimeCost(logNPY);
