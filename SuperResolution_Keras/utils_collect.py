@@ -384,7 +384,8 @@ def ShowLossAnalysisFigNPY2(strNPYname, boolSave = False, LOSS = "LOSS",
         ### info 
         loss_amount = len(tmp_dictLog[_n_loss])    # 資料數量
         x_list = [_j for _j in range(loss_amount)] # 橫軸
-        if _i // AMOUNT_LOSS_NUM == 2: # LOSS
+#        if _i // AMOUNT_LOSS_NUM == 2: # LOSS
+        if "loss" in _n_loss:
             print("LOSS"); 
             loss_list = tmp_dictLog[_n_loss].copy()    # 主要資料
             ### show info
@@ -392,7 +393,8 @@ def ShowLossAnalysisFigNPY2(strNPYname, boolSave = False, LOSS = "LOSS",
             ShowValMaxMinFig(x_list, loss_list, _n_loss,  boolSave = boolSave,
                              boolDictShow = {"val":True, "max":False, "min":True},
                              x_sub=x_sub);
-        if _i // AMOUNT_LOSS_NUM in [0, 1]: # PSNR、SSIM
+#        elif _i // AMOUNT_LOSS_NUM in [0, 1]: # PSNR、SSIM
+        elif "PSNR" in _n_loss or "SSIM" in _n_loss:
             loss_list_list = tmp_dictLog[_n_loss].copy()    # 主要資料
             dict_a = CalValidDict(loss_list_list)
             ### PICK - avg
@@ -456,5 +458,5 @@ if __name__ == "__main__" and True:
     strNPYname = './result/Y-struct_e20_b16_e+7+20_8-3/log_from2019-09-12 09_42_19.npy' # log.logNPY
     x_sub = 3 # 自己算一下， 每多少顯示一次，才不會太窄數
     # SHOW
-    ShowLossAnalysisFigNPY2(strNPYname=strNPYname, boolSave=boolSave, x_sub=5);
+    ShowLossAnalysisFigNPY2(strNPYname=strNPYname, boolSave=boolSave, x_sub=3);
     CalEpochTimeCost(strNPYname);
