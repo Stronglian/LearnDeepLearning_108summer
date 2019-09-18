@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-參考: https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/01-basics/feedforward_neural_network/main.py
+參考: https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/01-basics/feedforward_neural_network/main.py # 錯範本
+用這個啦: https://github.com/pytorch/examples/blob/master/mnist/main.py
+晚點再來修
 """
 
 #%%
@@ -18,18 +20,20 @@ from model_collect import Modle_TEST, Dataset_TEST
 from utils_collect import OWNLogger
 import numpy as np
 #%%
-num_epochs    = 100 # 0 for TEST # 100 就開始在低點飄
+num_epochs    = 200 # 0 for TEST # 100 就開始在低點飄
+num_unfreezeTime = 80
 #num_classes   = 15
 batch_size    = 16 # 8:3.6GB,
 learning_rate = 0.001
 useNet        = "alexNet" # "vgg"
+num_freezeNet = (31 if useNet == "vgg" else 9) # alexNet
 
 #model_weight_folder = "./result/struct1_e350_b16_b16_e350/"
 #model_weight_path = "model_b16_e350.ckpt"
 model_weight_folder = None
 model_weight_path   = None
 model_struct        = "struct2_%s"%(useNet)
-model_discription   = "b%d_e%d%s"%(batch_size, num_epochs, "requires_gradF") 
+model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "") 
 
 #processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
 processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -67,7 +71,7 @@ if model_weight_folder:
 #        model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path))
 #%% fine tune
 for _i, parm in enumerate(model_main.parameters()):
-    if _i > (31 if useNet == "vgg" else 9): # alexNet
+    if _i > num_freezeNet: 
 #        parm.requires_grad = True
         break
     else:
@@ -90,6 +94,7 @@ optimizer = torch.optim.Adam(model_main.parameters(), lr=learning_rate)
 #optimizer = torch.optim.Adam(model_main.classifier.parameters(), lr=learning_rate) # 只訓練自製的分類器
 #%% Train the model
 log.SetLogTime("train")
+model_main.train() # 記得這行
 for epoch in tqdm.tqdm(range(num_epochs)):
     log.SetLogTime("e%02d"%(epoch), boolPrint=True)
     loss_list = list()
@@ -112,6 +117,7 @@ for epoch in tqdm.tqdm(range(num_epochs)):
                    .format(epoch+1, num_epochs, _i+1, total_step, loss.item()))
         # LOSS cont
         loss_list.append(loss.item())
+        
     loss_avg = np.average(loss_list)
     log.AppendLossIn("loss_lab",  loss_avg)
     
@@ -120,11 +126,17 @@ for epoch in tqdm.tqdm(range(num_epochs)):
     if loss_avg > min_loss_avg:
         torch.save(model_main.state_dict(), '%s%s_%s_e%03d_lo%.3f.ckpt'%(saveFolder, model_struct, model_discription, epoch, loss_avg))
     log.SetLogTime("e%02d"%(epoch), mode = "end")
+    # epcoh 到
+    if epoch == num_unfreezeTime:
+        for _parm in model_main.parameters():
+            _parm.requires_grad = True
+
 log.SetLogTime("train", mode = "end")
 log.SaveLog2NPY(boolPrint=True)
 #%% Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
-with torch.no_grad(): # model_main.eval() # 似乎同意義?
+model_main.eval() # 似乎同意義?
+with torch.no_grad():
     correct = 0
     total = 0
     for images, labels, attributes in l_test:
