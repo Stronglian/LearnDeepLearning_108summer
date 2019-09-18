@@ -83,20 +83,6 @@ class Modle_TEST(nn.Module):
 #        for _i in range(self.num_resBlock):
 #            self.resBlock.append(ResidualBlock(in_channels = 256, out_channels = 256))
         
-#            self.droup1  = nn. Dropout(p=0.5)
-#            self.linear1 = nn.Linear(in_features=512 * 7 * 7, out_features=4096, bias=True) # If set to ``False``, the layer will not learn an additive bias.
-#            self.relu1   = nn.ReLU()
-#            
-#            self.droup2  = nn.Dropout(p=0.5)
-#            self.linear2 = nn.Linear(in_features=4096, out_features=4096, bias=True)
-#            self.relu2   = nn.ReLU()
-#            
-#            self.droup3  = nn.Dropout(p=0.5)
-#            self.linear3 = nn.Linear(in_features=4096, out_features=2048, bias=True)
-#            self.relu3   = nn.ReLU()
-#            
-#            self.linear4 = nn.Linear(in_features=2048, out_features=num_classes, bias=True)
-            
         if useNet == "alexNet":
             classifier_in_channel = 256 * 6 * 6
         if useNet == "vgg":
@@ -122,33 +108,18 @@ class Modle_TEST(nn.Module):
     
     def forward(self, x):
         data = self.extraction_features(x)  # struct 2 VGG
-        print("extraction_features =>", data.size(), flush=True)
+#        print("extraction_features =>", data.size(), flush=True)
         
         data = self.resBlock(data)
-        print("resBlock =>", data.size(), flush=True)
+#        print("resBlock =>", data.size(), flush=True)
 #        for _i in range(self.num_resBlock):
 #            data = self.resBlock[_i](data)
             
         data = data.view((data.size(0), -1)) # FLATTEN
-        print("view =>", data.size(), flush=True)
+#        print("view =>", data.size(), flush=True)
         
-#        if self.useNet == "vgg":
-#            data = self.droup1(data)
-#            data = self.linear1(data) # dense
-#            data = self.relu1(data)
-#            
-#            data = self.droup2(data)
-#            data = self.linear2(data)
-#            data = self.relu2(data)
-#            
-#            data = self.droup3(data)
-#            data = self.linear3(data)
-#            data = self.relu3(data)
-#            
-#            data = self.linear4(data)
-#        if self.useNet == "alexNet":
         data = self.classifier(data)
-        print("classifier =>", data.size(), flush=True)
+#        print("classifier =>", data.size(), flush=True)
 #        
 #        return data # struct 1
         return F.softmax(data, dim = 1) # struct 2
