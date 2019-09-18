@@ -67,9 +67,11 @@ if model_weight_folder:
 #        model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path))
 #%% fine tune
 for _i, parm in enumerate(model_main.parameters()):
-    if _i > (45 if useNet == "vgg" else 23): # alexNet
+    if _i > (31 if useNet == "vgg" else 9): # alexNet
+#        parm.requires_grad = True
         break
-    parm.requires_grad = False
+    else:
+        parm.requires_grad = False
 #%%
 # LOG
 log.ShowLocalTime()
@@ -82,6 +84,7 @@ log.UpdateProgSetting(itrMax = total_step,
 min_loss_avg = 9999
 #%% Loss and optimizer
 criterion = nn.CrossEntropyLoss()
+
 #optimizer = torch.optim.Adam(model_main.parameters(), lr=learning_rate)  
 optimizer = torch.optim.Adam(model_main.classifier.parameters(), lr=learning_rate) # 只訓練自製的分類器
 #%% Train the model
