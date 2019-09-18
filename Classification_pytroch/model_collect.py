@@ -219,9 +219,9 @@ if __name__ == "__main__":
     summary(model_tmp, input_size=(3, 224, 224), device=processUnit) 
     
 #%%
-for _i, param in enumerate(model_tmp.parameters()):
-    print(_i, "=>", param.requires_grad)
-#    param.requires_grad = False
+    for _i, param in enumerate(model_tmp.parameters()):
+        print(_i, "=>", param.requires_grad)
+#        param.requires_grad = False
 #%% LOAD    
 #    d_train = Dataset_TEST("train")
 #    l_train = DataLoader(dataset=d_train, 
