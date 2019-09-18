@@ -19,8 +19,8 @@ from torch.utils.data import Dataset, DataLoader
 from torchsummary import summary # pip install torchsummary
 #%% TEST
 
-#model_features = torchvision.models.alexnet(pretrained=True)#.features # call model
-#
+#model_features = torchvision.models.vgg19(pretrained=True)#.features # call model
+##
 #print(model_features)
 
 #%% RES BLOCK
@@ -101,10 +101,10 @@ class Modle_TEST(nn.Module):
             classifier_in_channel = 256 * 6 * 6
         if useNet == "vgg":
             classifier_in_channel = 512 * 7 * 7
-        # 以 parm grad 算，後面有六層?
+        # 以 parm grad 算，後面有六層? # 兩種網路，分類器長一樣，我還是先不改了?
         self.classifier = nn.Sequential( 
             nn.Dropout(p=0.8),
-            nn.Linear(classifier_in_channel, 4096), # 9216
+            nn.Linear(classifier_in_channel, 4096), # 9216 #25088
             nn.ReLU(inplace=True),
             
             nn.Dropout(p=0.5),
