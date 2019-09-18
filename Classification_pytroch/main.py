@@ -55,7 +55,7 @@ l_test  = DataLoader(dataset=d_test,
 
 total_step = len(l_train)
 #%% model
-model_main = Modle_TEST(num_resBlock=1).to(device_tmp)
+model_main = Modle_TEST(num_resBlock=1, useNet=useNet).to(device_tmp)
 
 summary(model_main, input_size=(3, 224, 224), device=processUnit) 
 # https://pytorch.org/tutorials/beginner/saving_loading_models.html
