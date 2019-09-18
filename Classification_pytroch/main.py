@@ -65,9 +65,9 @@ if model_weight_folder:
                                           map_location='cpu' if processUnit == "cpu" else None))
 #    else:
 #        model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path))
-    #%% fine tune
-for _i, parm in enumerate(model_main.parameters):
-    if _i > (45 if useNet == "vgg" else 23):
+#%% fine tune
+for _i, parm in enumerate(model_main.parameters()):
+    if _i > (45 if useNet == "vgg" else 23): # alexNet
         break
     parm.requires_grad = False
 #%%
