@@ -18,17 +18,18 @@ from model_collect import Modle_TEST, Dataset_TEST
 from utils_collect import OWNLogger
 import numpy as np
 #%%
-num_epochs = 350 # 0 for TEST
-#num_classes = 15
-batch_size = 16 # 8:3.6GB,
+num_epochs    = 350 # 0 for TEST
+#num_classes   = 15
+batch_size    = 16 # 8:3.6GB,
 learning_rate = 0.001
+useNet        = "alexNet"
 
 #model_weight_folder = "./result/struct1_e350_b16_b16_e350/"
 #model_weight_path = "model_b16_e350.ckpt"
 model_weight_folder = None
 model_weight_path   = None
-model_struct        = "struct2_VGG16"
-model_discription   = "b%d_e%d"%(batch_size, num_epochs) # 兩種輸出 3-8 比例
+model_struct        = "struct2_%s"%(useNet)
+model_discription   = "b%d_e%d_%s"%(batch_size, num_epochs, "LOCK_PARM") 
 
 #processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
 processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -64,6 +65,11 @@ if model_weight_folder:
                                           map_location='cpu' if processUnit == "cpu" else None))
 #    else:
 #        model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path))
+    #%% fine tune
+for _i, parm in enumerate(model_main.parameters):
+    if _i > (45 if useNet == "vgg" else 23):
+        break
+    parm.requires_grad = False
 #%%
 # LOG
 log.ShowLocalTime()
@@ -76,7 +82,8 @@ log.UpdateProgSetting(itrMax = total_step,
 min_loss_avg = 9999
 #%% Loss and optimizer
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model_main.parameters(), lr=learning_rate)  
+#optimizer = torch.optim.Adam(model_main.parameters(), lr=learning_rate)  
+optimizer = torch.optim.Adam(model_main.classifier.parameters(), lr=learning_rate) # 只訓練自製的分類器
 #%% Train the model
 log.SetLogTime("train")
 for epoch in tqdm.tqdm(range(num_epochs)):
