@@ -311,5 +311,5 @@ def CalEpochTimeCost(strNPYname, boolCalAll = False):
 #%%
 if __name__ == "__main__":
     logNPY = "./result/%s/%s.npy"%("struct2_alexNet_e100_b16_b16_e100requires_gradF", "log_from2019-09-18 06_54_08")
-    ShowLossAnalysisFigNPY_1(logNPY, max_show = "max", x_sub=10);
+    ShowLossAnalysisFigNPY_1(logNPY, max_show = "avg", x_sub=50);
     CalEpochTimeCost(logNPY);
