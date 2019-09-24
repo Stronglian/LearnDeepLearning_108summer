@@ -8,6 +8,36 @@ import numpy as np
 import json
 import os
 #from PIL im
+#%% confusion matrix
+class ConfusionMatrix:
+    def __init__(self, num_class):
+        self.num_class = num_class
+        self.LoadMatrix(); #rows, cols
+        return
+    def LoadMatrix(self, inMat = None):
+        if inMat == None:
+            self.ConMat = np.zeros((self.num_class, self.num_class)) #rows, cols
+        else:
+            self.ConMat = inMat
+        return
+    def GetConfusionMatrix(self, boolOrg=False):
+        return self.ConMat if boolOrg else  self.CalNorm(self.ConMat)
+    def CalNorm(self, inMat):
+        for _i in range(self.num_class):
+            inMat     = inMat.astype(np.float)
+            sum_tmp   = np.sum(inMat[_i][:])
+            inMat[_i] = inMat[_i]/sum_tmp
+        return inMat
+    def AddOne(self, groundTruth, netAns):
+        self.ConMat[groundTruth][netAns] += 1
+        return
+    def InputData(self, gtArr, ansArr):
+        if len(gtArr) != len(ansArr):
+            raise ValueError("比較雙方長度不同")
+        for _i, gt in enumerate(gtArr):
+            self.ConMat[gt][ansArr[_i]] +=1
+        return
+
 #%% show
 #def show_photo(img):
 #    plt.figure(figsize=(15, 15))
@@ -85,7 +115,7 @@ def LoadNPY(nameNPY, shape = None):
 def SaveNPY(nameNPY, nameArr):
     np.save(nameNPY, nameArr)
     return
-#%%
+    
 #%% Time
 """
 https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/369869/
