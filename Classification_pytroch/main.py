@@ -152,7 +152,7 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model_main.parameters(), lr=learning_rate)  
     min_loss_avg = 9999
     #%% TRAIN
-    if log != None:
+    if log != None and num_epochs != 0:
         log.SetLogTime("train")
     for epoch in tqdm.tqdm(range(num_epochs)):
         if log != None:
@@ -174,7 +174,7 @@ if __name__ == "__main__":
             log.AppendLossIn("loss_lab",  loss_avg)
             log.AppendLossIn("acc_valid",  acc_tmp)
             log.SetLogTime("e%02d"%(epoch), mode = "end")
-    if log != None:
+    if log != None and num_epochs != 0:
         log.SetLogTime("train", mode = "end")
         log.SaveLog2NPY(boolPrint=True)
     #%% TEST
