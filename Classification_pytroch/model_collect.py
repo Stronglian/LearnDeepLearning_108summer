@@ -19,7 +19,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchsummary import summary # pip install torchsummary
 #%% TEST
 
-#model_features = torchvision.models.vgg19(pretrained=True)#.features # call model
+#model_features = torchvision.models.(pretrained=True)#.features # call model
 ##
 #print(model_features)
 
@@ -58,7 +58,7 @@ class ResidualBlock(nn.Module):
 #%%
 class Modle_TEST(nn.Module):
     
-    def __init__(self, num_resBlock=1, num_classes=15, useNet="alexNet"):
+    def __init__(self, num_resBlock=1, num_classes=15, type_cla=0, useNet="alexNet"):
         """
         num_resBlock 沒作用? 還是無法被顯示?
         """
@@ -84,25 +84,34 @@ class Modle_TEST(nn.Module):
 #            self.resBlock.append(ResidualBlock(in_channels = 256, out_channels = 256))
         
         if useNet == "alexNet":
-            classifier_in_channel = 256 * 6 * 6
+            classifier_in_channel = 256 * 6 * 6 # 9216
         if useNet == "vgg":
-            classifier_in_channel = 512 * 7 * 7
+            classifier_in_channel = 512 * 7 * 7 #25088
         # 以 parm grad 算，後面有六層? # 兩種網路，分類器長一樣，我還是先不改了?
-        self.classifier = nn.Sequential( 
-            nn.Dropout(p=0.8),
-            nn.Linear(classifier_in_channel, 4096), # 9216 #25088
-            nn.ReLU(inplace=True),
-            
-            nn.Dropout(p=0.5),
-            nn.Linear(4096, 4096),
-            nn.ReLU(inplace=True),
-            
-            nn.Dropout(p=0.5),
-            nn.Linear(4096, 2048),
-            nn.ReLU(inplace=True),
-            
-            nn.Linear(2048, num_classes),
-        )
+        if type_cla == 0:
+            self.classifier = nn.Sequential( 
+                nn.Dropout(p=0.8),
+                nn.Linear(classifier_in_channel, 4096), 
+                nn.ReLU(inplace=True),
+                
+                nn.Dropout(p=0.5),
+                nn.Linear(4096, 4096),
+                nn.ReLU(inplace=True),
+                
+                nn.Dropout(p=0.5),
+                nn.Linear(4096, 2048),
+                nn.ReLU(inplace=True),
+                
+                nn.Linear(2048, num_classes),
+            )
+        elif type_cla == 1:
+            self.classifier = nn.Sequential( 
+                nn.Dropout(p=0.8),
+                nn.Linear(classifier_in_channel, 4096), 
+                nn.ReLU(inplace=True),
+                
+                nn.Linear(4096, num_classes),
+            )
         
         return
     
@@ -185,13 +194,13 @@ if __name__ == "__main__":
 #        torch.set_default_tensor_type('torch.FloatTensor')
         
 #%%
-    model_tmp = Modle_TEST(num_classes=num_classes, useNet="alexNet").to(device_tmp)
+    model_tmp = Modle_TEST(num_classes=num_classes, useNet="alexNet", type_cla=0).to(device_tmp)
     # summary
     summary(model_tmp, input_size=(3, 224, 224), device=processUnit) 
     
 #%%
-    for _i, param in enumerate(model_tmp.parameters()):
-        print(_i, "=>", param.requires_grad)
+#    for _i, param in enumerate(model_tmp.parameters()):
+#        print(_i, "=>", param.requires_grad)
 #        param.requires_grad = False
 #%% LOAD    
 #    d_train = Dataset_TEST("train")

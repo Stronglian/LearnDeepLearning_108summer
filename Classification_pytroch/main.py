@@ -17,14 +17,11 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchsummary import summary
 from model_collect import Modle_TEST, Dataset_TEST
-from utils_collect import OWNLogger
+from utils_collect import OWNLogger, ConfusionMatrix
 import numpy as np
 #%% Train the model
 def Train(args, model, device, train_loader, epoch, criterion, optimizer):
-    log.SetLogTime("train")
     model.train() # 記得這行
-#    for epoch in tqdm.tqdm(range(num_epochs)):
-    log.SetLogTime("e%02d"%(epoch), boolPrint=True)
     loss_list = list()
     for _i, (img, lab, attr) in enumerate(train_loader):
         img_ten  = (img / 255.0).float().to(device) 
@@ -47,29 +44,19 @@ def Train(args, model, device, train_loader, epoch, criterion, optimizer):
         loss_list.append(loss.item())
         
     loss_avg = np.average(loss_list)
-    log.AppendLossIn("loss_lab",  loss_avg)
     
-    print('Epoch [{}/{}], Loss avg:{:.4f}'
-          .format(epoch+1, num_epochs, loss_avg))
-    if loss_avg > min_loss_avg:
-        torch.save(model_main.state_dict(), '%s%s_%s_e%03d_lo%.3f.ckpt'%(saveFolder, model_struct, model_discription, epoch, loss_avg))
-    log.SetLogTime("e%02d"%(epoch), mode = "end")
-    # epcoh 到 可以訓練前面了
-    if epoch == num_unfreezeTime:
-        for _parm in model.parameters():
-            _parm.requires_grad = True
-    
-    log.SetLogTime("train", mode = "end")
-    log.SaveLog2NPY(boolPrint=True)
-    return
+    print('Epoch [{}/{}], Loss avg:{:.4f}'.format(epoch+1, num_epochs, loss_avg))
+        
+    return loss_avg
 #%% Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
-def Test(args, model, device, test_loader, epoch):
+# 
+def Test(args, model, device, test_loader, epoch, conMat=None, boolDEBUG=False):
     model.eval() # 似乎同意義?
     with torch.no_grad():
         correct = 0
         total = 0
-        for images, labels, attributes in test_loader:
+        for _i, (images, labels, attributes) in enumerate(test_loader):
             img_ten  = (images / 255.0).float().to(device) 
             lab_ten  = labels.long().to(device)
     #        attr_ten = attributes.float().to(device_tmp)
@@ -78,27 +65,37 @@ def Test(args, model, device, test_loader, epoch):
             _, predicted = torch.max(outputs.data, 1)
             total += lab_ten.size(0)
             correct += (predicted == lab_ten).sum().item()
-    
-        print('e{}, Accuracy of the network on the {} test images: {} %'.format(epoch, total, 100 * correct / total))
-    return
+            
+            if conMat != None:
+                conMat.InputData(np.array(lab_ten.cpu()), np.array(predicted.cpu()))
+            
+            if boolDEBUG:
+                print(np.array(lab_ten.cpu()))
+                print("=>", np.array(predicted.cpu()))
+    Accuracy_tmp = 100 * correct / total
+    print('e{}, Accuracy of the network on the {} test images: {} %'.format(epoch, total, Accuracy_tmp))
+    return Accuracy_tmp
 #%%
 if __name__ == "__main__":
     #%%
     args = list()
     num_epochs    = 200 # 0 for TEST # 100 就開始在低點飄
     num_unfreezeTime = 80
-    #num_classes   = 15
+    num_class     = 15
     batch_size    = 16 # 8:3.6GB,
     learning_rate = 0.001
     useNet        = "alexNet" # "vgg"
+    type_cla      = 0 # classifier type
     num_freezeNet = (31 if useNet == "vgg" else 9) # alexNet
     
-    #model_weight_folder = "./result/struct1_e350_b16_b16_e350/"
-    #model_weight_path = "model_b16_e350.ckpt"
+#    model_weight_folder = "./result/struct2_alexNet_e10_b16_b16_e10_ut80/"
+#    model_weight_path = "%s.ckpt" %("model_b16_e200_ut80")
+#    model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "TEST") 
     model_weight_folder = None
     model_weight_path   = None
-    model_struct        = "struct2_%s"%(useNet)
     model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "") 
+    
+    model_struct        = "struct2_%s_c%d"%(useNet, type_cla)
     
     #processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
     processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -109,7 +106,7 @@ if __name__ == "__main__":
     if not os.path.exists(saveFolder):
         os.makedirs(saveFolder)
     log = OWNLogger(logNPY=saveFolder,
-                    lossName=["loss_lab"])
+                    lossName=["loss_lab", "acc_valid"])
     #%% DATA LOAD
     d_train = Dataset_TEST("train")
     l_train = DataLoader(dataset=d_train, 
@@ -123,16 +120,14 @@ if __name__ == "__main__":
     
     total_step = len(l_train)
     #%% model
-    model_main = Modle_TEST(num_resBlock=1, useNet=useNet).to(device_tmp)
+    model_main = Modle_TEST(num_resBlock=1, useNet=useNet, num_classes=num_class, type_cla=type_cla).to(device_tmp)
     
     summary(model_main, input_size=(3, 224, 224), device=processUnit) 
     # https://pytorch.org/tutorials/beginner/saving_loading_models.html
     if model_weight_folder:
-    #    if processUnit == "cpu":
+        print("LOAD", model_weight_folder + model_weight_path)
         model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path,
                                               map_location='cpu' if processUnit == "cpu" else None))
-    #    else:
-    #        model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path))
     #%% fine tune
     for _i, parm in enumerate(model_main.parameters()):
         if _i > num_freezeNet: 
@@ -141,10 +136,6 @@ if __name__ == "__main__":
         else:
             parm.requires_grad = False
     
-    #%% Loss and optimizer
-    criterion = nn.CrossEntropyLoss()
-    
-    optimizer = torch.optim.Adam(model_main.parameters(), lr=learning_rate)  
     # base
     #optimizer = torch.optim.Adam(model_main.classifier.parameters(), lr=learning_rate) # 只訓練自製的分類器
     #%% LOG
@@ -155,11 +146,43 @@ if __name__ == "__main__":
                           model_weight_folder = model_weight_folder,
                           model_weight_path = model_weight_path,
                           model_discription = model_discription)
+    #%% Loss and optimizer
+    criterion = nn.CrossEntropyLoss()
+    
+    optimizer = torch.optim.Adam(model_main.parameters(), lr=learning_rate)  
     min_loss_avg = 9999
-    #%%
+    #%% TRAIN
+    if log != None:
+        log.SetLogTime("train")
     for epoch in tqdm.tqdm(range(num_epochs)):
-        Train(args, model_main, device_tmp, l_train, epoch, criterion, optimizer)
-        Test(args, model_main, device_tmp, l_test, epoch)
+        if log != None:
+            log.SetLogTime("e%02d"%(epoch), boolPrint=True)
+        # TRAIN
+        loss_avg = Train(args, model_main, device_tmp, l_train, epoch, criterion, optimizer, log=log)
+        
+        if loss_avg < min_loss_avg:
+            torch.save(model_main.state_dict(), '%s%s_%s_e%03d_lo%.3f.ckpt'%(saveFolder, model_struct, model_discription, epoch, loss_avg))
+            min_loss_avg = loss_avg
+        # VALID
+        acc_tmp  = Test(args, model_main, device_tmp, l_test, epoch)
+        
+        # epcoh 到 可以訓練前面了
+        if epoch == num_unfreezeTime:
+            for _parm in model_main.parameters():
+                _parm.requires_grad = True
+        if log != None:    
+            log.AppendLossIn("loss_lab",  loss_avg)
+            log.AppendLossIn("acc_valid",  acc_tmp)
+            log.SetLogTime("e%02d"%(epoch), mode = "end")
+    if log != None:
+        log.SetLogTime("train", mode = "end")
+        log.SaveLog2NPY(boolPrint=True)
+    #%% TEST
+    if num_epochs == 0 or True:
+        conMatOut = ConfusionMatrix(num_class=num_class)
+        Test(args, model_main, device_tmp, l_test, -1, conMat=conMatOut, boolDEBUG=True);
+        conMat = conMatOut.GetConfusionMatrix(boolOrg=True)
+        log.dictLog["LOSS"]['conMat'] = conMat
     # Save the model checkpoint
     torch.save(model_main.state_dict(), '%smodel_%s_END.ckpt'%(saveFolder, model_discription))
     #%% 分析
