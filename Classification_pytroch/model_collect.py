@@ -112,6 +112,10 @@ class Modle_TEST(nn.Module):
                 
                 nn.Linear(4096, num_classes),
             )
+        elif type_cla == 2: #直接接出來
+            self.classifier = nn.Sequential( 
+                nn.Linear(classifier_in_channel, num_classes),
+            )
         
         return
     
