@@ -158,7 +158,7 @@ if __name__ == "__main__":
         if log != None:
             log.SetLogTime("e%02d"%(epoch), boolPrint=True)
         # TRAIN
-        loss_avg = Train(args, model_main, device_tmp, l_train, epoch, criterion, optimizer, log=log)
+        loss_avg = Train(args, model_main, device_tmp, l_train, epoch, criterion, optimizer)
         
         if loss_avg < min_loss_avg:
             torch.save(model_main.state_dict(), '%s%s_%s_e%03d_lo%.3f.ckpt'%(saveFolder, model_struct, model_discription, epoch, loss_avg))
