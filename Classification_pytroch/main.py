@@ -180,15 +180,16 @@ if __name__ == "__main__":
             log.AppendLossIn("loss_lab",  loss_avg)
             log.AppendLossIn("acc_valid",  acc_tmp)
             log.SetLogTime("e%02d"%(epoch), mode = "end")
-    if log != None and num_epochs != 0:
-        log.SetLogTime("train", mode = "end")
-        log.SaveLog2NPY(boolPrint=True)
     #%% TEST
     if num_epochs == 0 or True:
         conMatOut = ConfusionMatrix(num_class=num_class)
         Test(args, model_main, device_tmp, l_test, -1, conMat=conMatOut, boolDEBUG=True);
         conMat = conMatOut.GetConfusionMatrix(boolOrg=True)
         log.dictLog["LOSS"]['conMat'] = conMat
+    #%% SAVE
+    if log != None and num_epochs != 0:
+        log.SetLogTime("train", mode = "end")
+        log.SaveLog2NPY(boolPrint=True)
     # Save the model checkpoint
     torch.save(model_main.state_dict(), '%smodel_%s_END.ckpt'%(saveFolder, model_discription))
     #%% 分析
