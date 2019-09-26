@@ -149,7 +149,7 @@ if __name__ == "__main__":
                           model_weight_path = model_weight_path,
                           model_discription = model_discription)
     #%% Loss and optimizer
-    criterion = nn.functional.cross_entropy() # CrossEntropyLoss()
+    criterion = nn.functional.cross_entropy # CrossEntropyLoss()
     
     optimizer = torch.optim.SGD(model_main.parameters(), lr=learning_rate) # adam  
     min_loss_avg = 9999
