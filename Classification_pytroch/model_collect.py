@@ -134,8 +134,8 @@ class Modle_TEST(nn.Module):
         data = self.classifier(data)
 #        print("classifier =>", data.size(), flush=True)
 #        
-#        return data # struct 1
-        return F.softmax(data, dim = 1) # struct 2
+        return data # struct 1
+#        return F.softmax(data, dim = 1) # struct 2
 #%%
 class Dataset_TEST(Dataset):
     def __init__(self, t_type, strFolderData = "../_DataSet/forP/"):
