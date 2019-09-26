@@ -64,7 +64,7 @@ def Test(args, model, device, test_loader, epoch, conMat=None, boolDEBUG=False):
             outputs = model(img_ten)
             outputs = nn.functional.softmax(outputs, dim = 1)
             
-            _, predicted = torch.max(outputs.data, 1)
+            _, predicted = torch.max(outputs, 1) # 不用 .data
             total += lab_ten.size(0)
             correct += (predicted == lab_ten).sum().item()
             
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     num_unfreezeTime = 80
     num_class     = 15
     batch_size    = 16 # 8:3.6GB,
-    learning_rate = 0.1
+    learning_rate = 0.01
     useNet        = "alexNet" # "vgg"
     type_cla      = 2 # classifier type
     num_freezeNet = (31 if useNet == "vgg" else 9) # alexNet
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     model_weight_path   = None
     model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "") 
     
-    model_struct        = "struct2_%s_c%d"%(useNet, type_cla)
+    model_struct        = "struct1_%s_c%d"%(useNet, type_cla)
     
 #    processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
     processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -131,15 +131,15 @@ if __name__ == "__main__":
         model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path,
                                               map_location='cpu' if processUnit == "cpu" else None))
     #%% fine tune
-#    for _i, parm in enumerate(model_main.parameters()):
-#        if _i > num_freezeNet: 
-#    #        parm.requires_grad = True
-#            break
-#        else:
-#            parm.requires_grad = False
+    for _i, parm in enumerate(model_main.parameters()):
+        if _i > num_freezeNet: 
+    #        parm.requires_grad = True
+            break
+        else:
+            parm.requires_grad = False
     
-    # base
-    #optimizer = torch.optim.Adam(model_main.classifier.parameters(), lr=learning_rate) # 只訓練自製的分類器
+#     base
+#    optimizer = torch.optim.Adam(model_main.classifier.parameters(), lr=learning_rate) # 只訓練自製的分類器
     #%% LOG
     log.ShowLocalTime()
     log.UpdateProgSetting(itrMax = total_step, 
@@ -153,6 +153,7 @@ if __name__ == "__main__":
     
     optimizer = torch.optim.SGD(model_main.parameters(), lr=learning_rate) # adam  
     min_loss_avg = 9999
+    max_valid    = 0
     #%% TRAIN
     if log != None and num_epochs != 0:
         log.SetLogTime("train")
@@ -167,11 +168,14 @@ if __name__ == "__main__":
             min_loss_avg = loss_avg
         # VALID
         acc_tmp  = Test(args, model_main, device_tmp, l_test, epoch)
+        if acc_tmp > max_valid:
+            torch.save(model_main.state_dict(), '%s%s_%s_e%03d_acc%.3f.ckpt'%(saveFolder, model_struct, model_discription, epoch, acc_tmp))
+            max_valid = acc_tmp
         
-#        # epcoh 到 可以訓練前面了
-#        if epoch == num_unfreezeTime:
-#            for _parm in model_main.parameters():
-#                _parm.requires_grad = True
+        # epcoh 到 可以訓練前面了
+        if epoch == num_unfreezeTime:
+            for _parm in model_main.parameters():
+                _parm.requires_grad = True
         if log != None:    
             log.AppendLossIn("loss_lab",  loss_avg)
             log.AppendLossIn("acc_valid",  acc_tmp)
