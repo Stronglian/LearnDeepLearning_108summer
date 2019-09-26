@@ -62,6 +62,8 @@ def Test(args, model, device, test_loader, epoch, conMat=None, boolDEBUG=False):
     #        attr_ten = attributes.float().to(device_tmp)
             
             outputs = model(img_ten)
+            outputs = nn.functional.softmax(outputs, dim = 1)
+            
             _, predicted = torch.max(outputs.data, 1)
             total += lab_ten.size(0)
             correct += (predicted == lab_ten).sum().item()
@@ -129,12 +131,12 @@ if __name__ == "__main__":
         model_main.load_state_dict(torch.load(model_weight_folder + model_weight_path,
                                               map_location='cpu' if processUnit == "cpu" else None))
     #%% fine tune
-    for _i, parm in enumerate(model_main.parameters()):
-        if _i > num_freezeNet: 
-    #        parm.requires_grad = True
-            break
-        else:
-            parm.requires_grad = False
+#    for _i, parm in enumerate(model_main.parameters()):
+#        if _i > num_freezeNet: 
+#    #        parm.requires_grad = True
+#            break
+#        else:
+#            parm.requires_grad = False
     
     # base
     #optimizer = torch.optim.Adam(model_main.classifier.parameters(), lr=learning_rate) # 只訓練自製的分類器
@@ -147,9 +149,9 @@ if __name__ == "__main__":
                           model_weight_path = model_weight_path,
                           model_discription = model_discription)
     #%% Loss and optimizer
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.functional.CrossEntropyLoss()
     
-    optimizer = torch.optim.Adam(model_main.parameters(), lr=learning_rate)  
+    optimizer = torch.optim.SGD(model_main.parameters(), lr=learning_rate) # adam  
     min_loss_avg = 9999
     #%% TRAIN
     if log != None and num_epochs != 0:
@@ -166,10 +168,10 @@ if __name__ == "__main__":
         # VALID
         acc_tmp  = Test(args, model_main, device_tmp, l_test, epoch)
         
-        # epcoh 到 可以訓練前面了
-        if epoch == num_unfreezeTime:
-            for _parm in model_main.parameters():
-                _parm.requires_grad = True
+#        # epcoh 到 可以訓練前面了
+#        if epoch == num_unfreezeTime:
+#            for _parm in model_main.parameters():
+#                _parm.requires_grad = True
         if log != None:    
             log.AppendLossIn("loss_lab",  loss_avg)
             log.AppendLossIn("acc_valid",  acc_tmp)
