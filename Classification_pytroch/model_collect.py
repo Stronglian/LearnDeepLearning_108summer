@@ -84,14 +84,14 @@ class Modle_TEST(nn.Module):
 #            self.resBlock.append(ResidualBlock(in_channels = 256, out_channels = 256))
         
         if useNet == "alexNet":
-            classifier_in_channel = 256 * 6 * 6 # 9216
+            feature_extraction_out_channel = 256 * 6 * 6 # 9216
         if useNet == "vgg":
-            classifier_in_channel = 512 * 7 * 7 #25088
+            feature_extraction_out_channel = 512 * 7 * 7 #25088
         # 以 parm grad 算，後面有六層? # 兩種網路，分類器長一樣，我還是先不改了?
         if type_cla == 0:
             self.classifier = nn.Sequential( 
                 nn.Dropout(p=0.8),
-                nn.Linear(classifier_in_channel, 4096), 
+                nn.Linear(feature_extraction_out_channel, 4096), 
                 nn.ReLU(inplace=True),
                 
                 nn.Dropout(p=0.5),
@@ -107,14 +107,14 @@ class Modle_TEST(nn.Module):
         elif type_cla == 1:
             self.classifier = nn.Sequential( 
                 nn.Dropout(p=0.8),
-                nn.Linear(classifier_in_channel, 4096), 
+                nn.Linear(feature_extraction_out_channel, 4096), 
                 nn.ReLU(inplace=True),
                 
                 nn.Linear(4096, num_classes),
             )
         elif type_cla == 2: #直接接出來
             self.classifier = nn.Sequential( 
-                nn.Linear(classifier_in_channel, num_classes),
+                nn.Linear(feature_extraction_out_channel, num_classes),
             )
         
         return
