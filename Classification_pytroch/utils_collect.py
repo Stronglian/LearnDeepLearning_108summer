@@ -338,8 +338,14 @@ def CalEpochTimeCost(strNPYname, boolCalAll = False):
     time_cost_avg = np.average(dictTimeCost["Epoch"])
     print("%s avg cost: %.3f sec./epoch"%(_tag, time_cost_avg))
     return time_cost_avg, dictTimeCost
+
+def CM():
+    return
 #%%
 if __name__ == "__main__":
-    logNPY = "./result/%s/%s.npy"%("struct2_alexNet_e100_b16_b16_e100requires_gradF", "log_from2019-09-18 06_54_08")
-    ShowLossAnalysisFigNPY_1(logNPY, max_show = "avg", x_sub=10);
+    logNPY = "./result/%s/%s.npy"%("struct1_alexNet_c2_e200_b16_b16_e200_ut80", "log_from2019-09-26 09_48_51")
+    ShowLossAnalysisFigNPY_1(logNPY, max_show = "max", x_sub=10);
     CalEpochTimeCost(logNPY);
+    
+    tmp = tmp_dictLog = np.load(logNPY, allow_pickle=True).item()
+    tmp_loss = tmp_dictLog["LOSS"]
