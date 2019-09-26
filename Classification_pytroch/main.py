@@ -28,12 +28,12 @@ def Train(args, model, device, train_loader, epoch, criterion, optimizer):
         lab_ten  = lab.long().to(device)
 #        attr_ten = attr.float().to(device)
         
+        optimizer.zero_grad()
         # Forward pass
         outputs = model(img_ten)
         loss = criterion(outputs, lab_ten)
         
         # Backward and optimize
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         
@@ -83,9 +83,9 @@ if __name__ == "__main__":
     num_unfreezeTime = 80
     num_class     = 15
     batch_size    = 16 # 8:3.6GB,
-    learning_rate = 0.001
+    learning_rate = 0.01
     useNet        = "alexNet" # "vgg"
-    type_cla      = 0 # classifier type
+    type_cla      = 2 # classifier type
     num_freezeNet = (31 if useNet == "vgg" else 9) # alexNet
     
 #    model_weight_folder = "./result/struct2_alexNet_e10_b16_b16_e10_ut80/"
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     
     model_struct        = "struct2_%s_c%d"%(useNet, type_cla)
     
-    #processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
+#    processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
     processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
     device_tmp = torch.device(processUnit)
     #%% logger
