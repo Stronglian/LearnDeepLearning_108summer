@@ -85,7 +85,7 @@ if __name__ == "__main__":
     num_unfreezeTime = 80
     num_class     = 15
     batch_size    = 16 # 8:3.6GB,
-    learning_rate = 0.01
+    learning_rate = 0.1
     useNet        = "alexNet" # "vgg"
     type_cla      = 2 # classifier type
     num_freezeNet = (31 if useNet == "vgg" else 9) # alexNet
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                           model_weight_path = model_weight_path,
                           model_discription = model_discription)
     #%% Loss and optimizer
-    criterion = nn.functional.CrossEntropyLoss()
+    criterion = nn.functional.cross_entropy() # CrossEntropyLoss()
     
     optimizer = torch.optim.SGD(model_main.parameters(), lr=learning_rate) # adam  
     min_loss_avg = 9999
