@@ -11,7 +11,7 @@ import os
 import numpy as np
 import torch
 import torchvision
-import torch.nn as nn
+import torch.nn as nn # 與 from torch import nn 有何不同
 from torch.nn import functional as F
 #import torchvision.transforms as transforms
 
@@ -54,7 +54,7 @@ class ResidualBlock(nn.Module):
         out += residual
         out = self.relu(out)
         return out
-
+    
 #%%
 class Modle_TEST(nn.Module):
     
@@ -74,24 +74,27 @@ class Modle_TEST(nn.Module):
             self.extraction_features = torchvision.models.vgg19(pretrained=True).features
         
         if useNet == "alexNet":
-            self.resBlock = ResidualBlock(in_channels = 256, out_channels = 256)
+            feature_extraction_out_channel = 256
         elif useNet == "vgg":
-            self.resBlock = ResidualBlock(in_channels = 512, out_channels = 512)
+            feature_extraction_out_channel = 512
+#        self.resBlock = ResidualBlock(in_channels = feature_extraction_out_channel, out_channels = feature_extraction_out_channel)
         # 要怎麼設計 複數 res net 
-#        self.num_resBlock = num_resBlock
-#        self.resBlock = list()
-#        for _i in range(self.num_resBlock):
-#            self.resBlock.append(ResidualBlock(in_channels = 256, out_channels = 256))
+        self.num_resBlock = num_resBlock
+        self.resBlocks = nn.Sequential()
+        for _i in range(self.num_resBlock):
+            self.resBlocks.add_module("ResBlcok%d"%(_i), 
+                                      ResidualBlock(in_channels = feature_extraction_out_channel, 
+                                                    out_channels = feature_extraction_out_channel))
         
         if useNet == "alexNet":
-            feature_extraction_out_channel = 256 * 6 * 6 # 9216
-        if useNet == "vgg":
-            feature_extraction_out_channel = 512 * 7 * 7 #25088
+            resblock_out_channel = 256 * 6 * 6 # 9216
+        elif useNet == "vgg":
+            resblock_out_channel = 512 * 7 * 7 #25088
         # 以 parm grad 算，後面有六層? # 兩種網路，分類器長一樣，我還是先不改了?
         if type_cla == 0:
             self.classifier = nn.Sequential( 
                 nn.Dropout(p=0.8),
-                nn.Linear(feature_extraction_out_channel, 4096), 
+                nn.Linear(resblock_out_channel, 4096), 
                 nn.ReLU(inplace=True),
                 
                 nn.Dropout(p=0.5),
@@ -107,14 +110,14 @@ class Modle_TEST(nn.Module):
         elif type_cla == 1:
             self.classifier = nn.Sequential( 
                 nn.Dropout(p=0.8),
-                nn.Linear(feature_extraction_out_channel, 4096), 
+                nn.Linear(resblock_out_channel, 4096), 
                 nn.ReLU(inplace=True),
                 
                 nn.Linear(4096, num_classes),
             )
         elif type_cla == 2: #直接接出來
             self.classifier = nn.Sequential( 
-                nn.Linear(feature_extraction_out_channel, num_classes),
+                nn.Linear(resblock_out_channel, num_classes),
             )
         
         return
@@ -123,7 +126,7 @@ class Modle_TEST(nn.Module):
         data = self.extraction_features(x)  # struct 2 VGG
 #        print("extraction_features =>", data.size(), flush=True)
         
-        data = self.resBlock(data)
+        data = self.resBlocks(data)
 #        print("resBlock =>", data.size(), flush=True)
 #        for _i in range(self.num_resBlock):
 #            data = self.resBlock[_i](data)
@@ -198,7 +201,7 @@ if __name__ == "__main__":
 #        torch.set_default_tensor_type('torch.FloatTensor')
         
 #%%
-    model_tmp = Modle_TEST(num_classes=num_classes, useNet="alexNet", type_cla=0).to(device_tmp)
+    model_tmp = Modle_TEST(num_resBlock=2, num_classes=num_classes, useNet="alexNet", type_cla=0).to(device_tmp)
     # summary
     summary(model_tmp, input_size=(3, 224, 224), device=processUnit) 
     
