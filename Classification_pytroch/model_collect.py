@@ -80,7 +80,7 @@ class Modle_TEST(nn.Module):
         elif useNet == "vgg":
             feature_extraction_out_channel = 512
 #        self.resBlock = ResidualBlock(in_channels = feature_extraction_out_channel, out_channels = feature_extraction_out_channel)
-        # 要怎麼設計 複數 res net 
+        # 複數 res net 
         self.resBlocks = nn.Sequential()
         for _i in range(self.num_resBlock):
             self.resBlocks.add_module("ResBlcok%d"%(_i), 
@@ -93,7 +93,7 @@ class Modle_TEST(nn.Module):
                 resblock_out_channel = 512 * 7 * 7 #25088
 #        elif type_cla in [3] and useNet == "alexNet":
 #            resblock_out_channel = 256
-        # 以 parm grad 算，後面有六層? # 兩種網路，分類器長一樣，我還是先不改了?
+        # 
         if type_cla == 0:
             self.classifier = nn.Sequential( 
                 nn.Dropout(p=0.8),
@@ -139,10 +139,9 @@ class Modle_TEST(nn.Module):
         data = self.extraction_features(x)  # struct 2 VGG
 #        print("extraction_features =>", data.size(), flush=True)
         
-        data = self.resBlocks(data)
-#        print("resBlock =>", data.size(), flush=True)
-#        for _i in range(self.num_resBlock):
-#            data = self.resBlock[_i](data)
+        if self.num_resBlock > 0:
+            data = self.resBlocks(data)
+#            print("resBlock =>", data.size(), flush=True)
             
         if self.type_cla in [3]:
             data = self.classifier_pre(data)
@@ -216,26 +215,7 @@ if __name__ == "__main__":
 #        torch.set_default_tensor_type('torch.FloatTensor')
         
 #%%
-    model_tmp = Modle_TEST(num_resBlock=2, num_classes=num_classes, useNet="alexNet", type_cla=3).to(device_tmp)
+    model_tmp = Modle_TEST(num_resBlock=1, num_classes=num_classes, useNet="alexNet", type_cla=3).to(device_tmp)
     # summary
     summary(model_tmp, input_size=(3, 224, 224), device=processUnit) 
     
-#%%
-#    for _i, param in enumerate(model_tmp.parameters()):
-#        print(_i, "=>", param.requires_grad)
-#        param.requires_grad = False
-#%% LOAD    
-#    d_train = Dataset_TEST("train")
-#    l_train = DataLoader(dataset=d_train, 
-#                         batch_size=batch_size, 
-#                         shuffle=True) 
-#%% Train
-#    total_step = len(l_train)
-#    for epoch in range(num_epochs):
-#        for _i, (img, lab, attr) in enumerate(l_train):
-#            img_ten  = (img/ 255.0).float().to(device_tmp) 
-##            lab_ten  = lab.long().to(device_tmp)
-##            attr_ten = attr.float().to(device_tmp)
-#            # Forward pass
-#            outputs = model_tmp(img_ten)
- 
