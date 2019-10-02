@@ -83,20 +83,21 @@ if __name__ == "__main__":
     #%%
     args = list()
     num_epochs    = 200 # 0 for TEST # 100 就開始在低點飄
-    num_unfreezeTime = 80
+    num_unfreezeTime = 200 # 80
     num_class     = 15
     batch_size    = 16 # 8:3.6GB,
     learning_rate = 0.01
     useNet        = "alexNet" # "vgg"
     type_cla      = 3 # classifier type
     num_freezeNet = (31 if useNet == "vgg" else 9) # alexNet
+    num_resBlock  = 0
     
 #    model_weight_folder = "./result/struct2_alexNet_e10_b16_b16_e10_ut80/"
 #    model_weight_path = "%s.ckpt" %("model_b16_e200_ut80")
 #    model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "TEST") 
     model_weight_folder = None
     model_weight_path   = None
-    model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "") 
+    model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "noRes") 
     
     model_struct        = "struct1_%s_c%d"%(useNet, type_cla)
     
@@ -123,7 +124,7 @@ if __name__ == "__main__":
     
     total_step = len(l_train)
     #%% model
-    model_main = Modle_TEST(num_resBlock=1, useNet=useNet, num_classes=num_class, type_cla=type_cla).to(device_tmp)
+    model_main = Modle_TEST(num_resBlock=num_resBlock, useNet=useNet, num_classes=num_class, type_cla=type_cla).to(device_tmp)
     
     summary(model_main, input_size=(3, 224, 224), device=processUnit) 
     # https://pytorch.org/tutorials/beginner/saving_loading_models.html
@@ -149,7 +150,8 @@ if __name__ == "__main__":
                           model_weight_folder = model_weight_folder,
                           model_weight_path = model_weight_path,
                           model_discription = model_discription,
-                          type_cla=type_cla)
+                          type_cla          = type_cla,
+                          num_resBlock      = num_resBlock)
     #%% Loss and optimizer
     criterion = nn.functional.cross_entropy # CrossEntropyLoss()
     
