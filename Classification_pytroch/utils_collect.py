@@ -275,7 +275,7 @@ def ShowValMaxMinFig(x_list, in_list, strLossName, max_show = None, boolSave = F
     return
 
 def ShowLossAnalysisFigNPY_1(strNPYname, boolSave = False, LOSS = "LOSS", 
-                           type_list = ["avg"], ignoredList = [], **darg):
+                           type_list = ["avg"], ignoredList = ["conMat"] **darg):
     """
     AMOUNT_LOSS_NUM: 有幾個結果
     簡化成一、兩張圖
