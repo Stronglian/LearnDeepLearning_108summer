@@ -275,7 +275,7 @@ def ShowValMaxMinFig(x_list, in_list, strLossName, max_show = None, boolSave = F
     return
 
 def ShowLossAnalysisFigNPY_1(strNPYname, boolSave = False, LOSS = "LOSS", 
-                           type_list = ["avg"], ignoredList = ["conMat"] **darg):
+                           type_list = ["avg"], ignoredList = ["conMat"], **darg):
     """
     AMOUNT_LOSS_NUM: 有幾個結果
     簡化成一、兩張圖
@@ -346,8 +346,8 @@ def CM():
     return
 #%%
 if __name__ == "__main__":
-    logNPY = "./result/%s/%s.npy"%("struct1_alexNet_c2_e200_b16_b16_e200_ut80", "log_from2019-09-26 09_48_51")
-    ShowLossAnalysisFigNPY_1(logNPY, max_show = "max", x_sub=10, ignoredList=["conMat"]);
+    logNPY = "./result/%s/%s.npy"%("struct1_alexNet_c3_e200_b16_b16_e200_ut80", "log_from2019-10-02 05_28_11")
+    ShowLossAnalysisFigNPY_1(logNPY, max_show = "max", x_sub=25);
     CalEpochTimeCost(logNPY);
     
     tmp_dictLog = np.load(logNPY, allow_pickle=True).item()
