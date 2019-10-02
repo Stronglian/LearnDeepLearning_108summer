@@ -32,6 +32,7 @@ def Train(args, model, device, train_loader, epoch, criterion, optimizer):
         # Forward pass
         outputs = model(img_ten)
         loss = criterion(outputs, lab_ten)
+#        loss = criterion(outputs, attr_ten)
         
         # Backward and optimize
         loss.backward()
@@ -87,7 +88,7 @@ if __name__ == "__main__":
     batch_size    = 16 # 8:3.6GB,
     learning_rate = 0.01
     useNet        = "alexNet" # "vgg"
-    type_cla      = 2 # classifier type
+    type_cla      = 3 # classifier type
     num_freezeNet = (31 if useNet == "vgg" else 9) # alexNet
     
 #    model_weight_folder = "./result/struct2_alexNet_e10_b16_b16_e10_ut80/"
@@ -147,7 +148,8 @@ if __name__ == "__main__":
                           epochs = num_epochs, 
                           model_weight_folder = model_weight_folder,
                           model_weight_path = model_weight_path,
-                          model_discription = model_discription)
+                          model_discription = model_discription,
+                          type_cla=type_cla)
     #%% Loss and optimizer
     criterion = nn.functional.cross_entropy # CrossEntropyLoss()
     
