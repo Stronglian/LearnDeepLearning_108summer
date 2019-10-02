@@ -27,4 +27,4 @@ for _n in os.listdir(folderData):
             trainAtt = np.load(folderData+_n) 
     dictData[t_type][d_type] = np.load(folderData+_n)
             
-show_result_row(trainImg[:5])
+show_result_row(trainImg[1150:1155])
