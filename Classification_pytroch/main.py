@@ -125,7 +125,8 @@ if __name__ == "__main__":
     #%% model
     model_main = Modle_Attr(num_resBlock=num_resBlock, useNet=useNet, num_classes=num_class, type_cla=type_cla).to(device_tmp)
     
-    summary(model_main, input_size=(3, 224, 224), device=processUnit) 
+#    summary(model_main, input_size=(3, 224, 224), device=processUnit) 
+    print(model_main)
     # https://pytorch.org/tutorials/beginner/saving_loading_models.html
     if model_weight_folder:
         print("LOAD", model_weight_folder + model_weight_path)
