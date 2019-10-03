@@ -198,26 +198,26 @@ class Modle_Attr(nn.Module): # struct 3
     def forward(self, img, attr):
         # 1st IN
         data = self.extraction_features(img)  # struct 2 VGG
-        print("extraction_features =>", data.size(), flush=True)
+#        print("extraction_features =>", data.size(), flush=True)
         
             
         if self.num_resBlock > 0:
             data = self.resBlocks(data)
-            print("resBlock =>", data.size(), flush=True)
+#            print("resBlock =>", data.size(), flush=True)
             
         if self.type_cla in [3]:
             data = self.classifier_pre(data)
         data = data.view((data.size(0), -1)) # FLATTEN
-        print("view =>", data.size(), flush=True)
+#        print("view =>", data.size(), flush=True)
         
         attr_in = self.transAttr(attr)
         attr_in = data.view((attr_in.size(0), -1)) # FLATTEN
-        print("transAttr =>", attr_in.size(), flush=True)
+#        print("transAttr =>", attr_in.size(), flush=True)
         
         data = torch.cat((data, attr_in), dim=1)
         
         data = self.classifier(data)
-        print("classifier =>", data.size(), flush=True)
+#        print("classifier =>", data.size(), flush=True)
         
         return data
 #%%
