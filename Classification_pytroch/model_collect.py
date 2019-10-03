@@ -162,7 +162,7 @@ class Modle_TEST(nn.Module):
 #%% input img and attr
 class Modle_Attr(nn.Module): # struct 3
     def __init__(self, num_resBlock=0, num_classes=15, type_cla=3, useNet="alexNet", boolUseAttr=True):
-        super(Modle_attr, self).__init__()
+        super(Modle_Attr, self).__init__()
         # parm
         self.num_resBlock = num_resBlock
         self.num_classes  = num_classes
