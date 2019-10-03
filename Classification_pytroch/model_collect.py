@@ -19,8 +19,8 @@ from torch.utils.data import Dataset #, DataLoader
 from torchsummary import summary # pip install torchsummary
 #%% TEST
 
-#model_features = torchvision.models.(pretrained=True)#.features # call model
-##
+#model_features = torchvision.models.alexnet(pretrained=True)#.features # call model
+
 #print(model_features)
 
 #%% RES BLOCK
@@ -58,7 +58,7 @@ class ResidualBlock(nn.Module):
 #%%
 class Modle_TEST(nn.Module):
     
-    def __init__(self, num_resBlock=1, num_classes=15, type_cla=0, useNet="alexNet"):
+    def __init__(self, num_resBlock=1, num_classes=15, type_cla=0, useNet="alexNet", boolUseAttr=False):
         """
         num_resBlock 沒作用? 還是無法被顯示?
         """
@@ -69,15 +69,17 @@ class Modle_TEST(nn.Module):
         self.useNet       = useNet
         self.num_resBlock = num_resBlock
         self.type_cla     = type_cla
+        self.boolUseAttr  = boolUseAttr
+        self.num_classes  = num_classes
         # 網路
-        if useNet == "alexNet":
+        if self.useNet == "alexNet":
             self.extraction_features = torchvision.models.alexnet(pretrained=True).features
-        elif useNet == "vgg":
+        elif self.useNet == "vgg":
             self.extraction_features = torchvision.models.vgg19(pretrained=True).features
         
-        if useNet == "alexNet":
+        if self.useNet == "alexNet":
             feature_extraction_out_channel = 256
-        elif useNet == "vgg":
+        elif self.useNet == "vgg":
             feature_extraction_out_channel = 512
 #        self.resBlock = ResidualBlock(in_channels = feature_extraction_out_channel, out_channels = feature_extraction_out_channel)
         # 複數 res net 
@@ -86,15 +88,15 @@ class Modle_TEST(nn.Module):
             self.resBlocks.add_module("ResBlcok%d"%(_i), 
                                       ResidualBlock(in_channels = feature_extraction_out_channel, 
                                                     out_channels = feature_extraction_out_channel))
-        if type_cla in [0, 1, 2]:
-            if useNet == "alexNet":
+        if self.type_cla in [0, 1, 2]:
+            if self.useNet == "alexNet":
                 resblock_out_channel = 256 * 6 * 6 # 9216
             elif useNet == "vgg":
                 resblock_out_channel = 512 * 7 * 7 #25088
 #        elif type_cla in [3] and useNet == "alexNet":
 #            resblock_out_channel = 256
         # 
-        if type_cla == 0:
+        if self.type_cla == 0:
             self.classifier = nn.Sequential( 
                 nn.Dropout(p=0.8),
                 nn.Linear(resblock_out_channel, 4096), 
@@ -110,7 +112,7 @@ class Modle_TEST(nn.Module):
                 
                 nn.Linear(2048, num_classes),
             )
-        elif type_cla == 1:
+        elif self.type_cla == 1:
             self.classifier = nn.Sequential( 
                 nn.Dropout(p=0.8),
                 nn.Linear(resblock_out_channel, 4096), 
@@ -118,11 +120,11 @@ class Modle_TEST(nn.Module):
                 
                 nn.Linear(4096, num_classes),
             )
-        elif type_cla == 2: #直接接出來
+        elif self.type_cla == 2: #直接接出來
             self.classifier = nn.Sequential( 
                 nn.Linear(resblock_out_channel, num_classes),
             )
-        elif type_cla == 3:
+        elif self.type_cla == 3:
             self.classifier_pre = nn.Sequential( 
                 nn.Conv2d(feature_extraction_out_channel, 128, 
                           kernel_size=3), # , stride=1, padding=0
@@ -132,10 +134,14 @@ class Modle_TEST(nn.Module):
             self.classifier = nn.Sequential( 
                 nn.Linear(64, num_classes),
             )
-            
+        # USE attr
+        if self.boolUseAttr:
+            pass
         return
     
-    def forward(self, x):
+    def forward(self, x, **darg):
+        if self.boolUseAttr:
+            attr = darg["attr"]
         data = self.extraction_features(x)  # struct 2 VGG
 #        print("extraction_features =>", data.size(), flush=True)
         
@@ -153,6 +159,67 @@ class Modle_TEST(nn.Module):
 #        
         return data # struct 1
 #        return F.softmax(data, dim = 1) # struct 2
+#%% input img and attr
+class Modle_Attr(nn.Module): # struct 3
+    def __init__(self, num_resBlock=0, num_classes=15, type_cla=3, useNet="alexNet", boolUseAttr=True):
+        super(Modle_attr, self).__init__()
+        # parm
+        self.num_resBlock = num_resBlock
+        self.num_classes  = num_classes
+        self.type_cla     = type_cla
+        self.useNet       = useNet
+        self.boolUseAttr  = boolUseAttr
+        # 
+        if self.useNet == "alexNet":
+            self.extraction_features = torchvision.models.alexnet(pretrained=True).features
+        feature_extraction_out_channel = 256
+        # ATTR 轉換成可用
+        self.transAttr = nn.Sequential(
+                nn.Linear(85, 64)
+                )
+        # 複數 res net 
+        if self.num_resBlock > 0:
+            self.resBlocks = nn.Sequential()
+            for _i in range(self.num_resBlock):
+                self.resBlocks.add_module("ResBlcok%d"%(_i), 
+                                          ResidualBlock(in_channels  = feature_extraction_out_channel, 
+                                                        out_channels = feature_extraction_out_channel))
+        # class
+        if self.type_cla == 3:
+            self.classifier_pre = nn.Sequential( 
+                nn.Conv2d(feature_extraction_out_channel, 128, 
+                          kernel_size=3), # , stride=1, padding=0
+                nn.Conv2d(128, 64, 
+                          kernel_size=4), 
+                )
+            self.classifier = nn.Sequential( 
+                nn.Linear(64 + 64, num_classes),
+            )
+    def forward(self, img, attr):
+        # 1st IN
+        data = self.extraction_features(img)  # struct 2 VGG
+        print("extraction_features =>", data.size(), flush=True)
+        
+            
+        if self.num_resBlock > 0:
+            data = self.resBlocks(data)
+            print("resBlock =>", data.size(), flush=True)
+            
+        if self.type_cla in [3]:
+            data = self.classifier_pre(data)
+        data = data.view((data.size(0), -1)) # FLATTEN
+        print("view =>", data.size(), flush=True)
+        
+        attr_in = self.transAttr(attr)
+        attr_in = data.view((attr_in.size(0), -1)) # FLATTEN
+        print("transAttr =>", attr_in.size(), flush=True)
+        
+        data = torch.cat((data, attr_in), dim=1)
+        
+        data = self.classifier(data)
+        print("classifier =>", data.size(), flush=True)
+        
+        return data
 #%%
 class Dataset_TEST(Dataset):
     def __init__(self, t_type, strFolderData = "../_DataSet/forP/"):
@@ -215,7 +282,7 @@ if __name__ == "__main__":
 #        torch.set_default_tensor_type('torch.FloatTensor')
         
 #%%
-    model_tmp = Modle_TEST(num_resBlock=1, num_classes=num_classes, useNet="alexNet", type_cla=3).to(device_tmp)
+    model_tmp = Modle_Attr(num_resBlock=1, num_classes=num_classes, useNet="alexNet", type_cla=3).to(device_tmp)
     # summary
-    summary(model_tmp, input_size=(3, 224, 224), device=processUnit) 
+    summary(model_tmp, input_size=[(3, 224, 224), (1, 85)], device=processUnit) 
     

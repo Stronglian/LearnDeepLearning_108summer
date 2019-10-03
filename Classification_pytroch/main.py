@@ -16,7 +16,7 @@ import tqdm
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchsummary import summary
-from model_collect import Modle_TEST, Dataset_TEST
+from model_collect import Modle_TEST, Dataset_TEST, Modle_Attr
 from utils_collect import OWNLogger, ConfusionMatrix
 import numpy as np
 #%% Train the model
@@ -26,13 +26,12 @@ def Train(args, model, device, train_loader, epoch, criterion, optimizer):
     for _i, (img, lab, attr) in enumerate(train_loader):
         img_ten  = (img / 255.0).float().to(device) 
         lab_ten  = lab.long().to(device)
-#        attr_ten = attr.float().to(device)
+        attr_ten = attr.float().to(device)
         
         optimizer.zero_grad()
         # Forward pass
-        outputs = model(img_ten)
+        outputs = model(img_ten, attr=attr_ten)
         loss = criterion(outputs, lab_ten)
-#        loss = criterion(outputs, attr_ten)
         
         # Backward and optimize
         loss.backward()
@@ -60,9 +59,9 @@ def Test(args, model, device, test_loader, epoch, conMat=None, boolDEBUG=False):
         for _i, (images, labels, attributes) in enumerate(test_loader):
             img_ten  = (images / 255.0).float().to(device) 
             lab_ten  = labels.long().to(device)
-    #        attr_ten = attributes.float().to(device_tmp)
+            attr_ten = attributes.float().to(device_tmp)
             
-            outputs = model(img_ten)
+            outputs = model(img_ten, attr=attr_ten)
             outputs = nn.functional.softmax(outputs, dim = 1)
             
             _, predicted = torch.max(outputs, 1) # 不用 .data
@@ -90,16 +89,16 @@ if __name__ == "__main__":
     useNet        = "alexNet" # "vgg"
     type_cla      = 3 # classifier type
     num_freezeNet = (31 if useNet == "vgg" else 9) # alexNet
-    num_resBlock  = 0
+    num_resBlock  = 1
     
 #    model_weight_folder = "./result/struct2_alexNet_e10_b16_b16_e10_ut80/"
 #    model_weight_path = "%s.ckpt" %("model_b16_e200_ut80")
 #    model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "TEST") 
     model_weight_folder = None
     model_weight_path   = None
-    model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "noRes") 
+    model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "") 
     
-    model_struct        = "struct1_%s_c%d"%(useNet, type_cla)
+    model_struct        = "1003struct3_%s_c%d"%(useNet, type_cla)
     
 #    processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
     processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -124,7 +123,7 @@ if __name__ == "__main__":
     
     total_step = len(l_train)
     #%% model
-    model_main = Modle_TEST(num_resBlock=num_resBlock, useNet=useNet, num_classes=num_class, type_cla=type_cla).to(device_tmp)
+    model_main = Modle_Attr(num_resBlock=num_resBlock, useNet=useNet, num_classes=num_class, type_cla=type_cla).to(device_tmp)
     
     summary(model_main, input_size=(3, 224, 224), device=processUnit) 
     # https://pytorch.org/tutorials/beginner/saving_loading_models.html
@@ -144,9 +143,10 @@ if __name__ == "__main__":
 #    optimizer = torch.optim.Adam(model_main.classifier.parameters(), lr=learning_rate) # 只訓練自製的分類器
     #%% LOG
     log.ShowLocalTime()
-    log.UpdateProgSetting(itrMax = total_step, 
+    log.UpdateProgSetting(itrMax    = total_step, 
                           batch_size = batch_size, 
-                          epochs = num_epochs, 
+                          epochs     = num_epochs, 
+                          model_struct      = model_struct,
                           model_weight_folder = model_weight_folder,
                           model_weight_path = model_weight_path,
                           model_discription = model_discription,
