@@ -96,7 +96,7 @@ if __name__ == "__main__":
 #    model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "TEST") 
     model_weight_folder = None
     model_weight_path   = None
-    model_discription   = "b%d_e%d_ut%d%s"%(batch_size, num_epochs, num_unfreezeTime, "") 
+    model_discription   = "e%d_ut%d%s"%(num_epochs, num_unfreezeTime, "") 
     
     model_struct        = "1003struct3_%s_c%d"%(useNet, type_cla)
     

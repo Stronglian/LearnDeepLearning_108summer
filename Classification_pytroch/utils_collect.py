@@ -346,7 +346,7 @@ def CM():
     return
 #%%
 if __name__ == "__main__":
-    logNPY = "./result/%s/%s.npy"%("struct1_alexNet_c3_e200_b16_b16_e200_ut200noRes", "log_from2019-10-03 06_09_10");
+    logNPY = "./result/%s/%s.npy"%("1003struct3_alexNet_c3_e200_b16_b16_e200_ut200", "log_from2019-10-03 10_33_30");
     ShowLossAnalysisFigNPY_1(logNPY, max_show = "max", x_sub=25);
     CalEpochTimeCost(logNPY);
     
