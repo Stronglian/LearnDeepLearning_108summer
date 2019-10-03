@@ -346,9 +346,25 @@ def CM():
     return
 #%%
 if __name__ == "__main__":
-    logNPY = "./result/%s/%s.npy"%("1003struct3_alexNet_c3_e200_b16_b16_e200_ut200", "log_from2019-10-03 10_33_30");
+    logNPY = "./result/%s/%s.npy"%("struct1_alexNet_c3_e200_b16_b16_e200_ut200noRes", "log_from2019-10-03 06_09_10"); # 08-2
+#    logNPY = "./result/%s/%s.npy"%("1003struct3_alexNet_c3_e200_b16_b16_e200_ut200", "log_from2019-10-03 10_33_30"); # 08-3
     ShowLossAnalysisFigNPY_1(logNPY, max_show = "max", x_sub=25);
     CalEpochTimeCost(logNPY);
     
     tmp_dictLog = np.load(logNPY, allow_pickle=True).item()
     tmp_conMat = tmp_dictLog["LOSS"]["conMat"]
+    #%% acc cont 全部的 準確率
+    acc_tmp = 0
+    for _i in range(15):
+        acc_tmp += tmp_conMat[_i][_i]
+    print( "acc: %.3f%%"%(acc_tmp / np.sum(tmp_conMat, dtype=np.float) *100) )
+    #%% mCA
+    mCA = 0
+    for _i in range(15):
+        # print(_i, tmp_conMat[_i, :])
+        acc_tmp_i = tmp_conMat[_i, _i]/np.sum(tmp_conMat[_i, :])
+        print("%.2f%%"%(acc_tmp_i*100))
+        mCA += acc_tmp_i
+    mCA /= 15
+    print("mCA: %.2f%%"%(mCA*100))
+        
