@@ -200,7 +200,6 @@ class Modle_Attr(nn.Module): # struct 3
         data = self.extraction_features(img)  # struct 2 VGG
 #        print("extraction_features =>", data.size(), flush=True)
         
-            
         if self.num_resBlock > 0:
             data = self.resBlocks(data)
 #            print("resBlock =>", data.size(), flush=True)
@@ -209,7 +208,7 @@ class Modle_Attr(nn.Module): # struct 3
             data = self.classifier_pre(data)
         data = data.view((data.size(0), -1)) # FLATTEN
 #        print("view =>", data.size(), flush=True)
-        
+        # 2nd IN
         attr_in = self.transAttr(attr)
         attr_in = data.view((attr_in.size(0), -1)) # FLATTEN
 #        print("transAttr =>", attr_in.size(), flush=True)
@@ -267,11 +266,9 @@ class Dataset_TEST(Dataset):
 #    return dataImg[:intNum]
 #%%
 if __name__ == "__main__":
-    hidden_size = 500
     num_classes = 15
-    num_epochs = 0
-    batch_size = 8
-    learning_rate = 0.001
+#    num_epochs  = 0
+#    batch_size    = 8
     
     processUnit = 'cpu'  # 因為 RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
 #    processUnit = 'cuda' if torch.cuda.is_available() else 'cpu'
